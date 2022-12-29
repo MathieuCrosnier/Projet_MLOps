@@ -1,8 +1,9 @@
 from fastapi import APIRouter , Depends , HTTPException , status
 from fastapi.security import OAuth2PasswordBearer , OAuth2PasswordRequestForm
-from jwt import encode , decode
+from jwt import encode , decode , PyJWTError
 from typing import Optional
 from pydantic import BaseModel
+from datetime import datetime , timedelta
 
 router = APIRouter(tags = ["Access"])
 
@@ -21,6 +22,7 @@ admin = User(username = "Mathieu" , password = "Crosnier" , is_admin = True)
 oauth2 = OAuth2PasswordBearer(tokenUrl = "token")
 secret_key = "9290a6c64b338dcb7cc17afe83310e284e976670d07580799b35f86ba0bab74a"
 algorithm = "HS256"
+token_expiration = 1
 
 def existing_user(username : str):
     result = list(filter(lambda x : x.username == username , users))
@@ -43,14 +45,20 @@ save_user(admin)
 
 def generate_token(user : User):
     dic = {"username" : user.username ,
-           "rights" : "Administrator" if user.is_admin else "Standard"}
+           "rights" : "Administrator" if user.is_admin else "Standard" ,
+           "exp" : datetime.utcnow() + timedelta(minutes = token_expiration)}
     encoded_jwt = encode(dic , secret_key , algorithm = algorithm)
     return encoded_jwt
 
-def decode_token(token : str):
-    payload = decode(token , secret_key , algorithms = [algorithm])
-    username : str = payload.get("username")
-    rights : str = payload.get("rights")
+def decode_token(token : str = Depends(oauth2)):
+    try:
+        payload = decode(token , secret_key , algorithms = [algorithm])
+        username : str = payload.get("username")
+        rights : str = payload.get("rights")
+    except PyJWTError:
+        raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED,
+                            detail = "Your session has expired.",
+                            headers = {"WWW-Authenticate": "Bearer"})
     return {"username" : username , "rights" : rights}
 
 @router.post("/token" , name = "Generate token")

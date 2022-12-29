@@ -1,9 +1,10 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-from fastapi import APIRouter
+from fastapi import APIRouter , Depends
 from pydantic import BaseModel
 import joblib
+from access import decode_token
 
 df = pd.read_csv("games.csv" , index_col = 0)
 
@@ -26,7 +27,7 @@ model = joblib.load("model.pkl")
 router = APIRouter(tags = ["Prediction"])
 
 @router.get("/prediction" , name = "Get model prediction")
-async def prediction(home_team : str , away_team : str , date : str):
+async def prediction(home_team : str , away_team : str , date : str , user = Depends(decode_token)):
     game = X_test_scaled[(df_to_bet["Home team"] == home_team) & (df_to_bet["Away team"] == away_team) & (df_to_bet["Date"] == date)]
     probs = model.predict_proba(game)[0]
     odds = np.round(1 / probs , 2)
