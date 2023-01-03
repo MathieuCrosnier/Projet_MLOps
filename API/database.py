@@ -52,5 +52,13 @@ def current_user(username : str , session : Session):
     return session.scalars(statement).first()
 
 def add_to_users_table(user : Users , session : Session):
-    session.add(Users(username = user.username , password = user.password , registered_date = datetime.now(timezone.utc)))
+    session.add(user)
+    session.commit()
+
+def add_to_predictions_table(prediction : Predictions , session : Session):
+    session.add(prediction)
+    session.commit()
+
+def add_to_logs_table(log : Logs , session : Session):
+    session.add(log)
     session.commit()
