@@ -5,9 +5,14 @@ import pymysql
 from datetime import datetime, timezone
 from fastapi import Depends
 
-Base = declarative_base()
+UsersBase = declarative_base()
+LogsBase = declarative_base()
+PredictionsBase = declarative_base()
+TeamsNamesBase = declarative_base()
+FIFABase = declarative_base()
+MatchesResultsBase = declarative_base()
 
-class Users(Base):
+class Users(UsersBase):
     __tablename__ = "users"
 
     username = Column(String(100) , primary_key = True , nullable = False)
@@ -15,14 +20,14 @@ class Users(Base):
     is_admin = Column(Boolean , nullable = False , server_default = text("0"))
     registered_date = Column(DateTime , nullable = False)
 
-class Logs(Base):
+class Logs(LogsBase):
     __tablename__ = "logs"
 
     username = Column(String(100) , primary_key = True , nullable = False)
     log_info = Column(String(100) , nullable = False)
     log_date = Column(DateTime , nullable = False)
 
-class Predictions(Base):
+class Predictions(PredictionsBase):
     __tablename__ = "predictions"
 
     username = Column(String(100) , primary_key = True , nullable = False)
@@ -34,10 +39,62 @@ class Predictions(Base):
     away_odd = Column(Float , nullable = False)
     prediction_date = Column(DateTime , nullable = False)
 
-engine = create_engine("mysql+pymysql://Mathieu:A4xpgru+@localhost/project")
+class TeamsNames(TeamsNamesBase):
+    __tablename__ = "teams_names"
 
-if not inspect(engine).has_table("users") :
-    Base.metadata.create_all(bind = engine)
+    id = Column(Integer , primary_key = True , nullable = False)
+    season = Column(String(100) , nullable = False)
+    division = Column(String(100) , nullable = False)
+    old_name = Column(String(100) , nullable = False)
+    new_name = Column(String(100) , nullable = False)
+
+class FIFA(FIFABase):
+    __tablename__ = "FIFA"
+
+    id = Column(Integer , primary_key = True , nullable = False)
+    season = Column(String(100) , nullable = False)
+    division = Column(String(100) , nullable = False)
+    team = Column(String(100) , nullable = False)
+    age = Column(Float , nullable = False)
+    overall = Column(Float , nullable = False)
+    potential = Column(Float , nullable = False)
+    value = Column(Float , nullable = False)
+    pace = Column(Float , nullable = False)
+    shooting = Column(Float , nullable = False)
+    passing = Column(Float , nullable = False)
+    dribbling = Column(Float , nullable = False)
+    defending = Column(Float , nullable = False)
+    physic = Column(Float , nullable = False)
+
+class MatchesResults(MatchesResultsBase):
+    __tablename__ = "matches_results"
+
+    ID = Column(Integer , primary_key = True , nullable = False)
+    season = Column(String(100) , nullable = False)
+    division = Column(String(100) , nullable = False)
+    date = Column(DateTime , nullable = False)
+    home_team = Column(String(100) , nullable = False)
+    away_team = Column(String(100) , nullable = False)
+    full_time_home_goals = Column(Integer , nullable = False)
+    full_time_away_goals = Column(Integer , nullable = False)
+    home_shots = Column(Integer , nullable = False)
+    away_shots = Column(Integer , nullable = False)
+    home_shots_on_target = Column(Integer , nullable = False)
+    away_shots_on_target = Column(Integer , nullable = False)
+    home_corners = Column(Integer , nullable = False)
+    away_corners = Column(Integer , nullable = False)
+    home_fouls = Column(Integer , nullable = False)
+    away_fouls = Column(Integer , nullable = False)
+    home_yellows = Column(Integer , nullable = False)
+    away_yellows = Column(Integer , nullable = False)
+    home_reds = Column(Integer , nullable = False)
+    away_reds = Column(Integer , nullable = False)
+    max_H = Column(Float , nullable = False)
+    max_D = Column(Float , nullable = False)
+    max_A = Column(Float , nullable = False)
+    full_time_result = Column(String(1) , nullable = False)
+
+engine = create_engine("mysql+pymysql://Mathieu:A4xpgru+@localhost/project")
 
 def start_session():
     sm = sessionmaker(engine)
