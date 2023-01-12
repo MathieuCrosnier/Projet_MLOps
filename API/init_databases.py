@@ -1,26 +1,14 @@
-from sqlalchemy import create_engine , inspect
-from sqlalchemy.orm import sessionmaker , Session
-import pymysql
-from database import UsersBase , LogsBase , PredictionsBase , TeamsNamesBase , FIFABase , MatchesResultsBase
 import pandas as pd
 import numpy as np
-import re
 from os import listdir
+import re
+from fastapi import APIRouter , Depends , HTTPException , status
+from access import decode_token
+from sqlalchemy import create_engine
+from databases import reset_tables , create_tables , start_session
 
+router = APIRouter(tags = ["Databases"])
 engine = create_engine("mysql+pymysql://Mathieu:A4xpgru+@localhost/project")
-
-if not inspect(engine).has_table("users") :
-    UsersBase.metadata.create_all(bind = engine)
-if not inspect(engine).has_table("logs") :
-    LogsBase.metadata.create_all(bind = engine)
-if not inspect(engine).has_table("predictions") :
-    PredictionsBase.metadata.create_all(bind = engine)
-if not inspect(engine).has_table("teams_names") :
-    TeamsNamesBase.metadata.create_all(bind = engine)
-if not inspect(engine).has_table("FIFA") :
-    FIFABase.metadata.create_all(bind = engine)
-if not inspect(engine).has_table("matches_results") :
-    MatchesResultsBase.metadata.create_all(bind = engine)
 
 def get_matches_results_df():
     input_data_address = "input_data/matches_results/"
@@ -118,7 +106,6 @@ def get_matches_results_df():
     
     matches_results_df = matches_results_df.rename(columns = dictionary)
     matches_results_df = matches_results_df.reset_index(drop = True)
-    matches_results_df.to_csv("output_data/matches_results.csv" , index = False)
 
     return matches_results_df
 
@@ -208,11 +195,93 @@ def get_FIFA_ratings_selected_players_df(matches_results_df : pd.DataFrame , FIF
 
     return FIFA_ratings_selected_players_df
 
+def get_clubs_correlation_dictionary(matches_results_df : pd.DataFrame , FIFA_ratings_selected_players_df : pd.DataFrame):
+    seasons = matches_results_df["Season"].unique()
+    seasons_dictionary = {}
 
-matches_results_df = get_matches_results_df()
-FIFA_ratings_df = get_FIFA_ratings_df()
-divisions_dictionary = get_divisions_dictionary(matches_results_df = matches_results_df , FIFA_ratings_df = FIFA_ratings_df)
-FIFA_ratings_selected_players_df = get_FIFA_ratings_selected_players_df(matches_results_df = matches_results_df , FIFA_ratings_df = FIFA_ratings_df , divisions_dictionary = divisions_dictionary)
+    for season in seasons:
+        divisions_dictionary = {}
+        divisions = matches_results_df[matches_results_df["Season"] == season]["Division"].unique()
+        for division in divisions:
+            clubs_temp1 = list(matches_results_df[(matches_results_df["Division"] == division) & (matches_results_df["Season"] == season)]["home_team"].unique())
+            clubs_temp2 = list(matches_results_df[(matches_results_df["Division"] == division) & (matches_results_df["Season"] == season)]["away_team"].unique())
+            clubs1 = set(clubs_temp1 + clubs_temp2)
+            clubs2 = FIFA_ratings_selected_players_df[(FIFA_ratings_selected_players_df["division"] == division) & (FIFA_ratings_selected_players_df["Season"] == season)]["team"].unique()
+    
+            print(season , division , len(clubs1) , len(clubs2))
 
-matches_results_df.to_sql("matches_results" , con = engine , if_exists = "append" , index = False)
-FIFA_ratings_selected_players_df.to_sql("FIFA" , con = engine , if_exists = "append" , index = False)
+            if len(clubs1) > len(clubs2):
+                raise ValueError("Certains clubs ne sont pas présents dans le jeu FIFA !")
+            elif len(clubs1) < len(clubs2):
+                raise ValueError("Attention, il manque les résultats de certaines équipes !")
+
+            clubs_dictionary = {}
+
+            for club1 in clubs1:
+                words1 = club1.split(" ")
+                max_common_letters = 0
+                min_uncommon_letters = 100
+
+                for club2 in clubs2:
+                    words2 = club2.split(" ")
+                    common_letters = 0
+                    uncommon_letters = 0
+
+                    for word1 in words1:
+                        for word2 in words2:
+                            for letters in zip(word1 , word2):
+                                if (letters[0] == letters[1]):
+                                    common_letters += 1
+                                else:
+                                    uncommon_letters += 1
+      
+                    if (common_letters > max_common_letters):
+                        max_common_letters = common_letters
+                        min_uncommon_letters = uncommon_letters
+                        corresponding_club = club2
+                    elif (common_letters == max_common_letters) & (uncommon_letters < min_uncommon_letters):
+                        max_common_letters = common_letters
+                        min_uncommon_letters = uncommon_letters
+                        corresponding_club = club2
+    
+                if corresponding_club in clubs_dictionary.values():
+                    for k , v in clubs_dictionary.items():
+                        if v == corresponding_club:
+                            print(k , "/" , v)
+                            print(club1 , "/" , corresponding_club)
+                            raise ValueError("Ce nom de club est déjà attribué !")
+                else:
+                    clubs_dictionary[club1] = corresponding_club
+            divisions_dictionary[division] = clubs_dictionary
+        seasons_dictionary[season] = divisions_dictionary
+    
+    return seasons_dictionary
+
+def replace_clubs_names(matches_results_df : pd.DataFrame , clubs_correlation_dictionary : dict):
+    for season in matches_results_df["Season"].unique():
+        for division in matches_results_df[matches_results_df["Season"] == season]["Division"].unique():
+            matches_results_df.loc[(matches_results_df["Season"] == season) & (matches_results_df["Division"] == division) , "home_team"] = matches_results_df[(matches_results_df["Season"] == season) & (matches_results_df["Division"] == division)]["home_team"].apply(lambda x: clubs_correlation_dictionary[season][division][x])
+            matches_results_df.loc[(matches_results_df["Season"] == season) & (matches_results_df["Division"] == division) , "away_team"] = matches_results_df[(matches_results_df["Season"] == season) & (matches_results_df["Division"] == division)]["away_team"].apply(lambda x: clubs_correlation_dictionary[season][division][x])
+    matches_results_df.to_csv("output_data/matches_results.csv" , index = False)
+    return matches_results_df
+
+@router.post("/initialize_databases" , name = "Initialize databases")
+async def initialize_tables(user = Depends(decode_token) , session = Depends(start_session)):
+    if user.get("rights") != "Administrator":
+        raise HTTPException(
+            status_code = status.HTTP_403_FORBIDDEN ,
+            detail = "You must be an administrator to perform this action." ,
+            headers = {"WWW-Authenticate": "Bearer"})
+    reset_tables()
+    create_tables(session = session)
+    matches_results_df = get_matches_results_df()
+    FIFA_ratings_df = get_FIFA_ratings_df()
+    divisions_dictionary = get_divisions_dictionary(matches_results_df = matches_results_df , FIFA_ratings_df = FIFA_ratings_df)
+    FIFA_ratings_selected_players_df = get_FIFA_ratings_selected_players_df(matches_results_df = matches_results_df , FIFA_ratings_df = FIFA_ratings_df , divisions_dictionary = divisions_dictionary)
+    clubs_correlation_dictionary = get_clubs_correlation_dictionary(matches_results_df , FIFA_ratings_selected_players_df)
+    matches_results_corrected_df = replace_clubs_names(matches_results_df , clubs_correlation_dictionary)
+
+    matches_results_corrected_df.to_sql("matches_results" , con = engine , if_exists = "append" , index = False)
+    FIFA_ratings_selected_players_df.to_sql("FIFA" , con = engine , if_exists = "append" , index = False)
+
+    return "Les bases de données ont été réinitialisées avec succès !"
