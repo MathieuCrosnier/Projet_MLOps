@@ -3,7 +3,11 @@ from init_databases import get_clubs_correlation_dictionary
 from sqlalchemy import create_engine
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
-import joblib
+from fastapi import APIRouter , Depends , HTTPException , status
+from joblib import dump
+from access import decode_token
+
+router = APIRouter(tags = ["Training"])
 
 def get_ml_df(matches_results_corrected_df : pd.DataFrame , FIFA_ratings_selected_players_df : pd.DataFrame):
     FIFA_ratings_selected_players_home_df = FIFA_ratings_selected_players_df.add_prefix("home_")
@@ -255,16 +259,27 @@ def train_model(ml_df : pd.DataFrame):
     y_train = ml_df["full_time_result"]
     scaler = StandardScaler().fit(X_train)
     X_train_scaled = pd.DataFrame(scaler.transform(X_train) , index = X_train.index , columns = X_train.columns)
+    X_train.to_csv("output_data/X_train.csv")
+    X_train_scaled.to_csv("output_data/X_train_scaled.csv")
     model = KNeighborsClassifier(n_neighbors = 134)
     model.fit(X_train_scaled , y_train)
-    joblib.dump(model, "output_data/model.pkl")
-    print("Le modèle a bien été entrainé !")
-
-    return model
+    dump(model , "output_data/model.pkl")
+    dump(scaler , "output_data/scaler.pkl")
+    
+    return
 
 engine = create_engine("mysql+pymysql://Mathieu:A4xpgru+@localhost/project")
 matches_results_corrected_df = pd.read_sql(sql = "SELECT * FROM matches_results", con = engine).drop(columns = "ID")
 FIFA_ratings_selected_players_df = pd.read_sql(sql = "SELECT * FROM FIFA", con = engine).drop(columns = "id")
 
-ml_df = get_ml_df(matches_results_corrected_df = matches_results_corrected_df , FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df)
-train_model(ml_df)
+@router.post("/train_model" , name = "Train the Machine Learning model")
+async def get_trained_model(user = Depends(decode_token)):
+    if user.get("rights") != "Administrator":
+        raise HTTPException(
+            status_code = status.HTTP_403_FORBIDDEN ,
+            detail = "You must be an administrator to perform this action." ,
+            headers = {"WWW-Authenticate": "Bearer"})
+    ml_df = get_ml_df(matches_results_corrected_df = matches_results_corrected_df , FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df)
+    train_model(ml_df)
+
+    return "Le modèle a bien été entrainé !"

@@ -1,7 +1,6 @@
-from sqlalchemy import select , create_engine
 from sqlalchemy.orm import sessionmaker , Session
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine , inspect , Column , String , Float , Integer , Boolean , DateTime , text
+from sqlalchemy import select , create_engine , inspect , Column , String , Float , Integer , Boolean , DateTime , text
 from datetime import datetime , timezone
 
 engine = create_engine("mysql+pymysql://Mathieu:A4xpgru+@localhost/project")

@@ -1,8 +1,6 @@
 from fastapi import APIRouter , Depends , HTTPException , status
 from fastapi.security import OAuth2PasswordBearer , OAuth2PasswordRequestForm
 from jwt import encode , decode , PyJWTError
-from typing import Optional
-from pydantic import BaseModel
 from datetime import datetime , timezone , timedelta
 from sqlalchemy.orm import Session
 from databases import start_session , current_user , add_to_users_table , Users
