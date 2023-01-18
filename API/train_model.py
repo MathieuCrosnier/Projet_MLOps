@@ -269,7 +269,7 @@ def train_model(ml_df : pd.DataFrame):
     return
 
 engine = create_engine("mysql+pymysql://Mathieu:A4xpgru+@localhost/project")
-matches_results_corrected_df = pd.read_sql(sql = "SELECT * FROM matches_results", con = engine).drop(columns = "ID")
+matches_results_corrected_df = pd.read_sql(sql = "SELECT * FROM matches_results", con = engine).drop(columns = "id")
 FIFA_ratings_selected_players_df = pd.read_sql(sql = "SELECT * FROM FIFA", con = engine).drop(columns = "id")
 
 @router.post("/train_model" , name = "Train the Machine Learning model")

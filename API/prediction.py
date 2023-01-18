@@ -237,23 +237,26 @@ def get_team_info(team : str , home_or_away : str , season : str = "2022-2023"):
 
     return pd.concat([team_stats_df , temp_df])
 
-def get_prediction_input(home_team : str , away_team : str , home_odd : float , away_odd : float):
+def get_prediction_input(home_team : str , away_team : str , home_odd_bookmaker : float , away_odd_bookmaker : float):
     df_home = get_team_info(team = home_team , home_or_away = "home")
     df_away = get_team_info(team = away_team , home_or_away = "away")
     df_home.index = [x.replace("home_" , "") for x in df_home.index]
     df_away.index = [x.replace("away_" , "") for x in df_away.index]
+    pd.concat([df_home , df_away] , axis = 1).to_csv("output_data/prediction_input.csv")
     df = df_home - df_away
-    df["Cote"] = away_odd - home_odd
-    
-    return df
+    df["Cote"] = away_odd_bookmaker - home_odd_bookmaker
+    df = df.to_frame().transpose()
+    scaler = load("output_data/scaler.pkl")
+    df_scaled = pd.DataFrame(scaler.transform(df) , index = df.index , columns = df.columns)
+    return df_scaled
 
 @router.post("/prediction" , name = "Get model prediction")
-async def prediction(home_team : str , away_team : str , home_odd : float , away_odd : float , date : str , user = Depends(decode_token) , session = Depends(start_session)):
-    game = get_prediction_input(home_team = home_team , away_team = away_team , home_odd = home_odd , away_odd = away_odd)
+async def prediction(home_team : str , away_team : str , home_odd_bookmaker : float , away_odd_bookmaker : float , game_date : str , user = Depends(decode_token) , session = Depends(start_session)):
+    game = get_prediction_input(home_team = home_team , away_team = away_team , home_odd_bookmaker = home_odd_bookmaker , away_odd_bookmaker = away_odd_bookmaker)
     probs = model.predict_proba(game)[0]
     odds = np.round(1 / probs , 2)
-    game_date = datetime.strptime(date , "%Y-%m-%d")
-    prediction = Predictions(username = user.get("username") , home_team = home_team , away_team = away_team , game_date = game_date , home_odd = odds[2] , draw_odd = odds[1] , away_odd = odds[0] , prediction_date = datetime.now(timezone.utc))
+    game_date = datetime.strptime(game_date , "%Y-%m-%d")
+    prediction = Predictions(username = user.get("username") , home_team = home_team , away_team = away_team , game_date = game_date , home_odd_predicted = odds[2] , draw_odd_predicted = odds[1] , away_odd_predicted = odds[0] , prediction_date = datetime.now(timezone.utc))
     add_to_predictions_table(prediction = prediction , session = session)
     
     return {

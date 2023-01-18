@@ -21,19 +21,20 @@ class Users(UsersBase):
 class Predictions(PredictionsBase):
     __tablename__ = "predictions"
 
+    id = Column(Integer , primary_key = True , nullable = False , autoincrement = True)
     username = Column(String(100) , primary_key = True , nullable = False)
     home_team = Column(String(100) , nullable = False)
     away_team = Column(String(100) , nullable = False)
     game_date = Column(DateTime , nullable = False)
-    home_odd = Column(Float , nullable = False)
-    draw_odd = Column(Float , nullable = False)
-    away_odd = Column(Float , nullable = False)
+    home_odd_predicted = Column(Float , nullable = False)
+    draw_odd_predicted = Column(Float , nullable = False)
+    away_odd_predicted = Column(Float , nullable = False)
     prediction_date = Column(DateTime , nullable = False)
 
 class FIFA(FIFABase):
     __tablename__ = "FIFA"
 
-    id = Column(Integer , primary_key = True , nullable = False)
+    id = Column(Integer , primary_key = True , nullable = False , autoincrement = True)
     season = Column(String(100) , nullable = False)
     division = Column(String(100) , nullable = False)
     team = Column(String(100) , nullable = False)
@@ -51,7 +52,7 @@ class FIFA(FIFABase):
 class MatchesResults(MatchesResultsBase):
     __tablename__ = "matches_results"
 
-    ID = Column(Integer , primary_key = True , nullable = False)
+    id = Column(Integer , primary_key = True , nullable = False , autoincrement = True)
     season = Column(String(100) , nullable = False)
     division = Column(String(100) , nullable = False)
     date = Column(DateTime , nullable = False)

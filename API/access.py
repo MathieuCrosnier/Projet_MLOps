@@ -10,7 +10,7 @@ router = APIRouter(tags = ["Access"])
 oauth2 = OAuth2PasswordBearer(tokenUrl = "token")
 secret_key = "9290a6c64b338dcb7cc17afe83310e284e976670d07580799b35f86ba0bab74a"
 algorithm = "HS256"
-token_expiration = 5
+token_expiration = 15
 
 def generate_token(user : Users):
     dic = {"username" : user.username ,
