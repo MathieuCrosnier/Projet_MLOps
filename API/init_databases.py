@@ -4,11 +4,9 @@ from os import listdir
 import re
 from fastapi import APIRouter , Depends , HTTPException , status
 from access import decode_token
-from sqlalchemy import create_engine
-from databases import reset_tables , create_tables , start_session
+from databases import reset_tables , create_tables , start_session , select_engine
 
 router = APIRouter(tags = ["Databases"])
-engine = create_engine("mysql+pymysql://Mathieu:A4xpgru+@localhost/project")
 
 def get_matches_results_df():
     input_data_address = "input_data/matches_results/"
@@ -266,7 +264,7 @@ def replace_clubs_names(matches_results_df : pd.DataFrame , clubs_correlation_di
     return matches_results_df
 
 @router.post("/initialize_databases" , name = "Initialize databases")
-async def initialize_tables(user = Depends(decode_token) , session = Depends(start_session)):
+async def initialize_tables(user = Depends(decode_token) , session = Depends(start_session) , engine = Depends(select_engine)):
     if user.get("rights") != "Administrator":
         raise HTTPException(
             status_code = status.HTTP_403_FORBIDDEN ,

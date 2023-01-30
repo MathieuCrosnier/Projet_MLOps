@@ -46,7 +46,7 @@ async def token(credentials : OAuth2PasswordRequestForm = Depends() , session = 
 
 @router.post("/signup" , name = "Create an account")
 async def signup(username : str , password : str , session : Session = Depends(start_session)):
-    if (username is None) or (password is None):
+    if (username == "") or (password == ""):
         raise HTTPException(
             status_code = status.HTTP_401_UNAUTHORIZED ,
             detail = "Username or password can't be empty"

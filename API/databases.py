@@ -2,8 +2,7 @@ from sqlalchemy.orm import sessionmaker , Session
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import select , create_engine , inspect , Column , String , Float , Integer , Boolean , DateTime , text
 from datetime import datetime , timezone
-
-engine = create_engine("mysql+pymysql://Mathieu:A4xpgru+@localhost/project")
+import os
 
 UsersBase = declarative_base()
 PredictionsBase = declarative_base()
@@ -77,7 +76,16 @@ class MatchesResults(MatchesResultsBase):
     max_A = Column(Float , nullable = False)
     full_time_result = Column(String(1) , nullable = False)
 
+def select_engine():
+    if os.environ.get("TEST") == "1":
+        engine = create_engine("mysql+pymysql://Mathieu:A4xpgru+@localhost/tests")
+    else:
+        engine = create_engine("mysql+pymysql://Mathieu:A4xpgru+@localhost/project")
+
+    return engine
+
 def start_session():
+    engine = select_engine()
     sm = sessionmaker(engine)
     session = sm()   
     try:
@@ -98,12 +106,14 @@ def add_to_predictions_table(prediction : Predictions , session : Session):
     session.commit()
 
 def reset_tables():
+    engine = select_engine()
     MatchesResultsBase.metadata.drop_all(engine)
     FIFABase.metadata.drop_all(engine)
     UsersBase.metadata.drop_all(engine)
     PredictionsBase.metadata.drop_all(engine)
 
 def create_tables(session : Session):
+    engine = select_engine()
     if not inspect(engine).has_table("users") :
         UsersBase.metadata.create_all(bind = engine)
         add_to_users_table(Users(username = "Mathieu", password = "Crosnier", is_admin = 1 , registered_date = datetime.now(timezone.utc)) , session = session)

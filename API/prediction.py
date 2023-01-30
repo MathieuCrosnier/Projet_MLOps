@@ -5,18 +5,17 @@ from fastapi import APIRouter , Depends
 from pydantic import BaseModel
 from joblib import load
 from access import decode_token
-from sqlalchemy import select , create_engine
 from sqlalchemy.orm import Session
-from databases import start_session , add_to_predictions_table , Predictions
+from databases import start_session , add_to_predictions_table , Predictions , select_engine
 from datetime import datetime , timezone
 
 router = APIRouter(tags = ["Prediction"])
 
-engine = create_engine("mysql+pymysql://Mathieu:A4xpgru+@localhost/project")
 model = load("output_data/model.pkl")
 scaler = load("output_data/scaler.pkl")
 
 def get_team_info(team : str , home_or_away : str , season : str = "2022-2023"):
+    engine = select_engine()
     team_stats_df = pd.read_sql(sql = "SELECT * FROM FIFA WHERE team = '{}' AND season = '{}'".format(team , season), con = engine).drop(columns = ["id" , "season" , "division" , "team"])
     team_results_df = pd.read_sql(sql = "SELECT * FROM matches_results WHERE (home_team = '{}' OR away_team = '{}') AND season = '{}'".format(team , team , season), con = engine).sort_values(by = "date")
 

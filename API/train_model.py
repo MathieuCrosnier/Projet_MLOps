@@ -1,11 +1,11 @@
 import pandas as pd
 from init_databases import get_clubs_correlation_dictionary
-from sqlalchemy import create_engine
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 from fastapi import APIRouter , Depends , HTTPException , status
 from joblib import dump
 from access import decode_token
+from sqlalchemy import create_engine
 
 router = APIRouter(tags = ["Training"])
 
@@ -269,6 +269,7 @@ def train_model(ml_df : pd.DataFrame):
     return
 
 engine = create_engine("mysql+pymysql://Mathieu:A4xpgru+@localhost/project")
+
 matches_results_corrected_df = pd.read_sql(sql = "SELECT * FROM matches_results", con = engine).drop(columns = "id")
 FIFA_ratings_selected_players_df = pd.read_sql(sql = "SELECT * FROM FIFA", con = engine).drop(columns = "id")
 
