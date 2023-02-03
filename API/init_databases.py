@@ -176,7 +176,7 @@ def get_FIFA_ratings_selected_players_df(matches_results_df : pd.DataFrame , FIF
     
     FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df.drop(FIFA_ratings_selected_players_df[(FIFA_ratings_selected_players_df["Season"] == "2019-2020") & (FIFA_ratings_selected_players_df["club_name"] == "Bury")].index)
     FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df.reset_index(drop = True)
-    FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df.drop(columns = ["team_position" , "player_positions"])
+    FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df.drop(columns = ["short_name" , "team_position" , "player_positions"])
     FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df.groupby(["Season" , "league_name" , "club_name"]).agg(np.nanmean).reset_index()
     FIFA_ratings_selected_players_df.columns = FIFA_ratings_selected_players_df.columns.str.replace("_" , " ")
     FIFA_ratings_selected_players_df.columns = FIFA_ratings_selected_players_df.columns.str.capitalize()

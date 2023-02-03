@@ -1,8 +1,9 @@
 from sqlalchemy.orm import sessionmaker , Session
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import select , create_engine , inspect , Column , String , Float , Integer , Boolean , DateTime , text
+from sqlalchemy import select , create_engine , inspect , Column , String , Float , Integer , Boolean , DateTime , text , exc
 from datetime import datetime , timezone
 import os
+import yaml
 
 UsersBase = declarative_base()
 PredictionsBase = declarative_base()
@@ -76,12 +77,17 @@ class MatchesResults(MatchesResultsBase):
     max_A = Column(Float , nullable = False)
     full_time_result = Column(String(1) , nullable = False)
 
+with open("parameters.yml", "r") as stream:
+    parameters = yaml.safe_load(stream)
+
 def select_engine():
     if os.environ.get("TEST") == "1":
-        engine = create_engine("mysql+pymysql://Mathieu:A4xpgru+@localhost/tests")
+        config =  parameters.get("database").get("test")
+        engine = create_engine(f'mysql+pymysql://{config.get("MYSQL_USER")}:{config.get("MYSQL_PASSWORD")}@{config.get("MYSQL_HOST")}/{config.get("MYSQL_DB")}')   
     else:
-        engine = create_engine("mysql+pymysql://Mathieu:A4xpgru+@localhost/project")
-
+        config =  parameters.get("database").get("production")
+        engine = create_engine(f'mysql+pymysql://{config.get("MYSQL_USER")}:{config.get("MYSQL_PASSWORD")}@{config.get("MYSQL_HOST")}/{config.get("MYSQL_DB")}')
+    
     return engine
 
 def start_session():

@@ -5,7 +5,7 @@ from sklearn.preprocessing import StandardScaler
 from fastapi import APIRouter , Depends , HTTPException , status
 from joblib import dump
 from access import decode_token
-from sqlalchemy import create_engine
+from databases import select_engine
 
 router = APIRouter(tags = ["Training"])
 
@@ -268,18 +268,15 @@ def train_model(ml_df : pd.DataFrame):
     
     return
 
-engine = create_engine("mysql+pymysql://Mathieu:A4xpgru+@localhost/project")
-
-matches_results_corrected_df = pd.read_sql(sql = "SELECT * FROM matches_results", con = engine).drop(columns = "id")
-FIFA_ratings_selected_players_df = pd.read_sql(sql = "SELECT * FROM FIFA", con = engine).drop(columns = "id")
-
 @router.post("/train_model" , name = "Train the Machine Learning model")
-async def get_trained_model(user = Depends(decode_token)):
+async def get_trained_model(user = Depends(decode_token) , engine = Depends(select_engine)):
     if user.get("rights") != "Administrator":
         raise HTTPException(
             status_code = status.HTTP_403_FORBIDDEN ,
             detail = "You must be an administrator to perform this action." ,
             headers = {"WWW-Authenticate": "Bearer"})
+    matches_results_corrected_df = pd.read_sql(sql = "SELECT * FROM matches_results", con = engine).drop(columns = "id")
+    FIFA_ratings_selected_players_df = pd.read_sql(sql = "SELECT * FROM FIFA", con = engine).drop(columns = "id")
     ml_df = get_ml_df(matches_results_corrected_df = matches_results_corrected_df , FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df)
     train_model(ml_df)
 

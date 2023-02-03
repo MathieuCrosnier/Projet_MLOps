@@ -28,6 +28,7 @@ def decode_token(token : str = Depends(oauth2)):
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED,
                             detail = "Your session has expired.",
                             headers = {"WWW-Authenticate": "Bearer"})
+    
     return {"username" : username , "rights" : rights}
 
 @router.post("/token" , name = "Generate token")

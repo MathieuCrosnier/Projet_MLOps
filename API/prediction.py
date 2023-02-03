@@ -16,8 +16,8 @@ scaler = load("output_data/scaler.pkl")
 
 def get_team_info(team : str , home_or_away : str , season : str = "2022-2023"):
     engine = select_engine()
-    team_stats_df = pd.read_sql(sql = "SELECT * FROM FIFA WHERE team = '{}' AND season = '{}'".format(team , season), con = engine).drop(columns = ["id" , "season" , "division" , "team"])
-    team_results_df = pd.read_sql(sql = "SELECT * FROM matches_results WHERE (home_team = '{}' OR away_team = '{}') AND season = '{}'".format(team , team , season), con = engine).sort_values(by = "date")
+    team_stats_df = pd.read_sql(sql = f"SELECT * FROM FIFA WHERE team = '{team}' AND season = '{season}'" , con = engine).drop(columns = ["id" , "season" , "division" , "team"])
+    team_results_df = pd.read_sql(sql = f"SELECT * FROM matches_results WHERE (home_team = '{team}' OR away_team = '{team}') AND season = '{season}'" , con = engine).sort_values(by = "date")
 
     temp = pd.DataFrame(dtype = "float")
     temp_df = team_results_df.copy()
@@ -259,7 +259,7 @@ async def prediction(home_team : str , away_team : str , home_odd_bookmaker : fl
     add_to_predictions_table(prediction = prediction , session = session)
     
     return {
-        "Cote victoire {}".format(home_team) : odds[2] ,
+        f"Cote victoire {home_team}" : odds[2] ,
          "Cote match nul" : odds[1] ,
-          "Cote victoire {}".format(away_team) : odds[0]
+          f"Cote victoire {away_team}" : odds[0]
     }

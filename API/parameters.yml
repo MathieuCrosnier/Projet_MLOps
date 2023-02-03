@@ -1,0 +1,14 @@
+database:
+  production:
+    MYSQL_USER: root
+    MYSQL_PASSWORD: Passw0rd+
+    MYSQL_HOST: localhost
+    MYSQL_DB: production
+    MYSQL_PORT: 3306
+    
+  test:
+    MYSQL_USER: root
+    MYSQL_PASSWORD: Passw0rd+
+    MYSQL_HOST: localhost
+    MYSQL_DB: test
+    MYSQL_PORT: 3307
