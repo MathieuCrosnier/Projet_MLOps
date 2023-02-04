@@ -7,13 +7,16 @@ on:
 
 env:
   TEST: 1
-  MYSQL_ROOT_PASSWORD: Passw0rd+
-
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
+    services:
+      mysql:
+        image: mysql:latest
+        env:
+          MYSQL_ROOT_PASSWORD: Passw0rd+
+          
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
