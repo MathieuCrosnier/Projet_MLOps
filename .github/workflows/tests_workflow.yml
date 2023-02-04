@@ -23,12 +23,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: 3.11
-
-    - name: Start MySQL container
-      uses: docker://mysql:8.0
-      with:
-        args: --default-authentication-plugin=mysql_native_password         
+        python-version: 3.11   
       
     - name: Connect to MySQL
       run: |
