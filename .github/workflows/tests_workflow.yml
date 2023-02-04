@@ -23,11 +23,10 @@ jobs:
       with:
         python-version: 3.11
 
-    - name: Pull MySQL Docker image
-      uses: docker://mysql:latest
-
     - name: Start MySQL container
-      uses: docker://mysql:latest         
+      uses: docker://mysql:latest
+      with:
+        args: --default-authentication-plugin=mysql_native_password         
       
     - name: Connect to MySQL
       run: |
