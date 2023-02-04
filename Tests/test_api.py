@@ -9,8 +9,7 @@ sys.path.append(os.path.abspath("../API"))
 os.chdir(os.path.abspath("../API"))
 
 from main import api
-from access import generate_token
-from databases import Users , select_engine , UsersBase , add_to_users_table , start_session
+from databases import Users , select_engine , UsersBase , add_to_users_table
 
 client = TestClient(api)
 
@@ -27,40 +26,67 @@ def test_home():
     assert response.status_code == 200
     assert response.json() == "Bienvenue sur l'API de SportsBetPy"
 
-def test_user():
-    response = client.get("/user")
-    assert response.status_code == 401
-    assert response.json() == {"detail" : "Not authenticated"}
-
-@pytest.mark.parametrize("user,status_code,json" , [(Users(username = "Mathieu" , is_admin = True) , 200 , {"username" : "Mathieu" , "rights" : "Administrator"}),
-                                                    (Users(username = "Micheline" , is_admin = False) , 200 , {"username" : "Micheline" , "rights" : "Standard"})])
-def test_user2(user , status_code , json):
-    token = generate_token(user)
-    response = client.get("/user" , headers = {"Authorization": f"Bearer {token}"})
-    assert response.status_code == status_code
-    assert response.json() == json
-
-def test_token1():
-    response = client.post("/token" , data = {"username" : "Micheline" , "password" : "Barbin"})
-    assert response.status_code == 401
-    assert response.json() == {'detail': 'Incorrect username or password'}
-
-def test_token2():
-    response = client.post("/token" , data = {"username" : "Mathieu" , "password" : "Crosnier"})
-    assert response.status_code == 200
-
-@pytest.mark.parametrize("params,status_code,json" , [({"username" : "Elsy" , "password" : "Barbin"} , 200 , "Your account has been created"),
-                                                      ({"username" : "Elsy" , "password" : "Barbin"} , 401 , {'detail': "The username already exists"}),
-                                                      ({"username" : "" , "password" : ""} , 401 , {'detail': "Username or password can't be empty"})])
+@pytest.mark.parametrize("params,status_code,json" , [({"username" : "Elsy" , "password" : "Barbin"} , 200 , "Your account has been created !"),
+                                                      ({"username" : "Elsy" , "password" : "Crosnier"} , 401 , {'detail': "The username already exists !"}),
+                                                      ({"username" : "" , "password" : ""} , 401 , {'detail': "Username or password can't be empty !"})])
 def test_signup(params , status_code , json):
     response = client.post("/signup" , params = params)
     assert response.status_code == status_code
     assert response.json() == json
 
-@pytest.mark.parametrize("user,status_code,json" , [(Users(username = "Elsy" , is_admin = False) , 403 , {"detail": "You must be an administrator to perform this action."}),
-                                                    (Users(username = "Mathieu" , is_admin = True) , 200 , "Les bases de données ont été réinitialisées avec succès !")])
+@pytest.mark.parametrize("user,status_code,json" , [({"username" : "" , "password" : ""} , 422 , [{'loc': ['body', 'username'], 'msg': 'field required', 'type': 'value_error.missing'}, {'loc': ['body', 'password'], 'msg': 'field required', 'type': 'value_error.missing'}]),
+                                                    ({"username" : "Micheline" , "password" : "Crobin"} , 401 , "Incorrect username or password !"),
+                                                    ({"username" : "Mathieu" , "password" : "CROSNIER"} , 401 , "Incorrect username or password !"),
+                                                    ({"username" : "Elsy" , "password" : "Barbin"} , 200 , None),
+                                                    ({"username" : "Mathieu" , "password" : "Crosnier"} , 200 , None)])
+def test_token(user , status_code , json):
+    response = client.post("/token" , data = user)
+    assert response.status_code == status_code
+    assert response.json().get("detail") == json
+
+def test_user():
+    response = client.get("/user")
+    assert response.status_code == 401
+    assert response.json() == {"detail" : "Not authenticated"}
+
+@pytest.mark.parametrize("user,status_code,json" , [({"username" : "Micheline" , "password" : "Crobin"} , 401 , {'detail': 'Your session has expired !'}),
+                                                    ({"username" : "Mathieu" , "password" : "CROSNIER"} , 401 , {'detail': 'Your session has expired !'}),
+                                                    ({"username" : "Elsy" , "password" : "Barbin"} , 200 , {'username': 'Elsy' , 'rights' : 'Standard'}),
+                                                    ({"username" : "Mathieu" , "password" : "Crosnier"} , 200 , {'username': 'Mathieu' , 'rights' : 'Administrator'})])
+def test_user2(user , status_code , json):
+    token = client.post("/token" , data = user).json().get("access_token")
+    response = client.get("/user" , headers = {"Authorization": f"Bearer {token}"})
+    assert response.status_code == status_code
+    assert response.json() == json
+
+@pytest.mark.parametrize("params,user,status_code,json" , [({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "Grenoble Foot 38" , "home_odd_bookmaker" : 1.5 , "away_odd_bookmaker" : 3.5 , "game_date" : "2023-02-04"} , {"username" : "Micheline" , "password" : "Crobin"} , 401 , "Your session has expired !"),
+                                                           ({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "Grenoble Foot 38" , "home_odd_bookmaker" : 1.5 , "away_odd_bookmaker" : 3.5 , "game_date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "CROSNIER"} , 401 , "Your session has expired !"),
+                                                           ({"home_team" : "" , "away_team" : "Grenoble Foot 38" , "home_odd_bookmaker" : 1.5 , "away_odd_bookmaker" : 3.5 , "game_date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "Crosnier"} , 401 , "One of the teams you selected doesn't exist !"),
+                                                           ({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "" , "home_odd_bookmaker" : 1.5 , "away_odd_bookmaker" : 3.5 , "game_date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "Crosnier"} , 401 , "One of the teams you selected doesn't exist !"),
+                                                           ({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "Grenoble Foot 38" , "home_odd_bookmaker" : 1.5 , "away_odd_bookmaker" : 3.5 , "game_date" : "2023-02-04"} , {"username" : "Elsy" , "password" : "Barbin"} , 200 , None),
+                                                           ({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "Grenoble Foot 38" , "home_odd_bookmaker" : 1.5 , "away_odd_bookmaker" : 3.5 , "game_date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "Crosnier"} , 200 , None)])
+def test_prediction(params , user , status_code , json):
+    token = client.post("/token" , data = user).json().get("access_token")
+    response = client.post("prediction" , params = params , headers = {"Authorization": f"Bearer {token}"})
+    assert response.status_code == status_code
+    assert response.json().get("detail") == json
+
+@pytest.mark.parametrize("user,status_code,json" , [({"username" : "Micheline" , "password" : "Crobin"} , 401 , {'detail' : 'Your session has expired !'}),
+                                                    ({"username" : "Mathieu" , "password" : "CROSNIER"} , 401 , {'detail' : 'Your session has expired !'}),
+                                                    ({"username" : "Elsy" , "password" : "Barbin"} , 403 , {'detail' : 'You must be an administrator to perform this action !'}),
+                                                    ({"username" : "Mathieu" , "password" : "Crosnier"} , 200 , 'The model has been trained !')])
+def test_train_model(user , status_code , json):
+    token = client.post("/token" , data = user).json().get("access_token")
+    response = client.post("/train_model" , headers = {"Authorization" : f"Bearer {token}"})
+    assert response.status_code == status_code
+    assert response.json() == json
+
+@pytest.mark.parametrize("user,status_code,json" , [({"username" : "Micheline" , "password" : "Crobin"} , 401 , {'detail' : 'Your session has expired !'}),
+                                                    ({"username" : "Mathieu" , "password" : "CROSNIER"} , 401 , {'detail' : 'Your session has expired !'}),
+                                                    ({"username" : "Elsy" , "password" : "Barbin"} , 403 , {'detail' : 'You must be an administrator to perform this action !'}),
+                                                    ({"username" : "Mathieu" , "password" : "Crosnier"} , 200 , 'Databases have been succesfully initialized !')])
 def test_initialize_databases(user , status_code , json):
-    token = generate_token(user)
+    token = client.post("/token" , data = user).json().get("access_token")
     response = client.post("/initialize_databases" , headers = {"Authorization" : f"Bearer {token}"})
     assert response.status_code == status_code
     assert response.json() == json

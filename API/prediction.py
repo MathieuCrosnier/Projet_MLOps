@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-from fastapi import APIRouter , Depends
+from fastapi import APIRouter , Depends , HTTPException , status
 from pydantic import BaseModel
 from joblib import load
 from access import decode_token
@@ -19,6 +19,12 @@ def get_team_info(team : str , home_or_away : str , season : str = "2022-2023"):
     team_stats_df = pd.read_sql(sql = f"SELECT * FROM FIFA WHERE team = '{team}' AND season = '{season}'" , con = engine).drop(columns = ["id" , "season" , "division" , "team"])
     team_results_df = pd.read_sql(sql = f"SELECT * FROM matches_results WHERE (home_team = '{team}' OR away_team = '{team}') AND season = '{season}'" , con = engine).sort_values(by = "date")
 
+    if (team_stats_df.empty) or (team_results_df.empty):
+        raise HTTPException(
+            status_code = status.HTTP_401_UNAUTHORIZED ,
+            detail = "One of the teams you selected doesn't exist !"
+        )
+
     temp = pd.DataFrame(dtype = "float")
     temp_df = team_results_df.copy()
     index_max = temp_df.index.max()
@@ -31,7 +37,7 @@ def get_team_info(team : str , home_or_away : str , season : str = "2022-2023"):
         temp_df.loc[new_index_max , "home_team"] = np.nan
         temp_df.loc[new_index_max , "away_team"] = team
     else:
-        raise ValueError
+        raise ValueError("The value of parameter 'home_or_away' is incorrect !")
         
     temp_df.loc[new_index_max , "season"] = season
     temp_df.loc[new_index_max , "full_time_result"] = "H"
@@ -52,7 +58,7 @@ def get_team_info(team : str , home_or_away : str , season : str = "2022-2023"):
             temp.loc[i , "ST"] = temp_df.loc[i , "away_shots_on_target"]
         
         else:        
-            raise ValueError
+            raise ValueError("There is a problem with the team name !")
 
     temp_1 = temp.rolling(1 , min_periods = 1).mean().shift(fill_value = 0)
     temp_3 = temp.rolling(3 , min_periods = 1).mean().shift(fill_value = 0)
@@ -156,7 +162,7 @@ def get_team_info(team : str , home_or_away : str , season : str = "2022-2023"):
         temp_df.loc[new_index_max , "away_Shots on target (40 games)"] = temp_40.loc[new_index_max , "ST"]
 
     else:
-        raise ValueError
+        raise ValueError("There is a problem with the team name !")
         
     temp = pd.Series(dtype = "float")
     index = temp_df.index
@@ -171,7 +177,7 @@ def get_team_info(team : str , home_or_away : str , season : str = "2022-2023"):
             elif temp_df.loc[i , "full_time_result"] == "A":
                 temp.loc[i] = 0
             else:
-                raise ValueError
+                raise ValueError("'full_time_result' takes an incorrect value !")
         
         elif temp_df.loc[i , "away_team"] == team:        
             if temp_df.loc[i , "full_time_result"] == "A":       
@@ -181,10 +187,10 @@ def get_team_info(team : str , home_or_away : str , season : str = "2022-2023"):
             elif temp_df.loc[i , "full_time_result"] == "H":
                 temp.loc[i] = 0
             else:
-                raise ValueError
+                raise ValueError("'full_time_result' takes an incorrect value !")
         
         else:        
-            raise ValueError
+            raise ValueError("There is a problem with the team name !")
 
     temp_1 = temp.rolling(1 , min_periods = 1).mean().shift(fill_value = 0)
     temp_3 = temp.rolling(3 , min_periods = 1).mean().shift(fill_value = 0)
@@ -226,7 +232,7 @@ def get_team_info(team : str , home_or_away : str , season : str = "2022-2023"):
         temp_df.loc[new_index_max , "away_Points (home or away) (20 games)"] = temp_20_away.loc[new_index_max]
 
     else:
-        raise ValueError
+        raise ValueError("There is a problem with the team name !")
     
     temp_df = temp_df.drop(columns = team_results_df.columns)
     temp_df = temp_df.loc[temp_df.index.max()]

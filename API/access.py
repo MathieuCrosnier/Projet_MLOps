@@ -4,13 +4,18 @@ from jwt import encode , decode , PyJWTError
 from datetime import datetime , timezone , timedelta
 from sqlalchemy.orm import Session
 from databases import start_session , current_user , add_to_users_table , Users
+import yaml
 
 router = APIRouter(tags = ["Access"])
 
 oauth2 = OAuth2PasswordBearer(tokenUrl = "token")
-secret_key = "9290a6c64b338dcb7cc17afe83310e284e976670d07580799b35f86ba0bab74a"
-algorithm = "HS256"
-token_expiration = 15
+
+with open("parameters.yml", "r") as stream:
+    parameters = yaml.safe_load(stream)
+
+secret_key = parameters.get("jwt").get("SECRET_KEY")
+algorithm = parameters.get("jwt").get("ALGORITHM")
+token_expiration = parameters.get("jwt").get("TOKEN_EXPIRATION")
 
 def generate_token(user : Users):
     dic = {"username" : user.username ,
@@ -26,7 +31,7 @@ def decode_token(token : str = Depends(oauth2)):
         rights : str = payload.get("rights")
     except PyJWTError:
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED,
-                            detail = "Your session has expired.",
+                            detail = "Your session has expired !",
                             headers = {"WWW-Authenticate": "Bearer"})
     
     return {"username" : username , "rights" : rights}
@@ -39,7 +44,7 @@ async def token(credentials : OAuth2PasswordRequestForm = Depends() , session = 
     if (user is None) or ((user is not None) & (password != user.password)):
         raise HTTPException(
             status_code = status.HTTP_401_UNAUTHORIZED ,
-            detail = "Incorrect username or password" ,
+            detail = "Incorrect username or password !" ,
             headers = {"WWW-Authenticate": "Bearer"} ,
         )    
     token = generate_token(user)
@@ -50,18 +55,18 @@ async def signup(username : str , password : str , session : Session = Depends(s
     if (username == "") or (password == ""):
         raise HTTPException(
             status_code = status.HTTP_401_UNAUTHORIZED ,
-            detail = "Username or password can't be empty"
+            detail = "Username or password can't be empty !"
         )
     user = current_user(username = username , session = session)
     if user is not None:
         raise HTTPException(
             status_code = status.HTTP_401_UNAUTHORIZED ,
-            detail = "The username already exists"
+            detail = "The username already exists !"
         )
     if user is None:
         user = Users(username = username , password = password , registered_date = datetime.now(timezone.utc))
         add_to_users_table(user = user , session = session)
-    return "Your account has been created"
+    return "Your account has been created !"
 
 @router.get("/user" , name = "Get user information")
 async def user(token : str = Depends(oauth2)):

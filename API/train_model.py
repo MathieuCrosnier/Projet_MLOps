@@ -44,7 +44,7 @@ def get_ml_df(matches_results_corrected_df : pd.DataFrame , FIFA_ratings_selecte
                     temp.loc[i , "ST"] = temp_df.loc[i , "away_shots_on_target"]
                 
                 else:        
-                    raise ValueError
+                    raise ValueError("There is a problem with the team name !")
             
             temp_1 = temp.rolling(1 , min_periods = 1).mean().shift(fill_value = 0)
             temp_3 = temp.rolling(3 , min_periods = 1).mean().shift(fill_value = 0)
@@ -150,7 +150,7 @@ def get_ml_df(matches_results_corrected_df : pd.DataFrame , FIFA_ratings_selecte
                     temp_df.loc[i , "away_Shots on target (40 games)"] = temp_40.loc[i , "ST"]
                 
                 else:
-                    raise ValueError
+                    raise ValueError("There is a problem with the team name !")
 
     teams = temp_df["home_team"].unique()
     seasons = temp_df["season"].unique()
@@ -171,7 +171,7 @@ def get_ml_df(matches_results_corrected_df : pd.DataFrame , FIFA_ratings_selecte
                     elif temp_df.loc[i , "full_time_result"] == "A":
                         temp.loc[i] = 0
                     else:
-                        raise ValueError
+                        raise ValueError("'full_time_result' takes an incorrect value !")
                 
                 elif temp_df.loc[i , "away_team"] == team:        
                     if temp_df.loc[i , "full_time_result"] == "A":       
@@ -181,10 +181,10 @@ def get_ml_df(matches_results_corrected_df : pd.DataFrame , FIFA_ratings_selecte
                     elif temp_df.loc[i , "full_time_result"] == "H":
                         temp.loc[i] = 0
                     else:
-                        raise ValueError
+                        raise ValueError("'full_time_result' takes an incorrect value !")
                 
                 else:        
-                    raise ValueError
+                    raise ValueError("There is a problem with the name of the team !")
             
             temp_1 = temp.rolling(1 , min_periods = 1).mean().shift(fill_value = 0)
             temp_3 = temp.rolling(3 , min_periods = 1).mean().shift(fill_value = 0)
@@ -228,7 +228,7 @@ def get_ml_df(matches_results_corrected_df : pd.DataFrame , FIFA_ratings_selecte
                     temp_df.loc[i , "away_Points (home or away) (20 games)"] = temp_20_away.loc[i]
 
                 else:
-                    raise ValueError
+                    raise ValueError("There is a problem with the team name !")
 
     temp_df = temp_df.reset_index(drop = True)
     temp_df.to_csv("output_data/temp_df.csv" , index = False)
@@ -247,9 +247,8 @@ def get_ml_df(matches_results_corrected_df : pd.DataFrame , FIFA_ratings_selecte
 
     df = df.drop(columns = df_matches_results.columns.drop("full_time_result"))
     df = df.reset_index(drop = True)
-    print("\nLe dataframe comporte {} matches.".format(df.shape[0]))
-    print("\nLe dataframe comporte {} valeurs manquantes.".format(df.isna().sum().sum()))
-    
+    print(f"\nLe dataframe comporte {df.shape[0]} matches.")
+    print(f"\nLe dataframe comporte {df.isna().sum().sum()} valeurs manquantes.")
     df.to_csv("output_data/final_dataset.csv" , index = False)
 
     return df
@@ -273,11 +272,11 @@ async def get_trained_model(user = Depends(decode_token) , engine = Depends(sele
     if user.get("rights") != "Administrator":
         raise HTTPException(
             status_code = status.HTTP_403_FORBIDDEN ,
-            detail = "You must be an administrator to perform this action." ,
+            detail = "You must be an administrator to perform this action !" ,
             headers = {"WWW-Authenticate": "Bearer"})
     matches_results_corrected_df = pd.read_sql(sql = "SELECT * FROM matches_results", con = engine).drop(columns = "id")
     FIFA_ratings_selected_players_df = pd.read_sql(sql = "SELECT * FROM FIFA", con = engine).drop(columns = "id")
     ml_df = get_ml_df(matches_results_corrected_df = matches_results_corrected_df , FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df)
     train_model(ml_df)
 
-    return "Le modèle a bien été entrainé !"
+    return "The model has been trained !"

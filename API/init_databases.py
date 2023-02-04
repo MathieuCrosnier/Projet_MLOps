@@ -59,7 +59,7 @@ def get_matches_results_df():
             bookmakers_A.append(rA.findall(col)[0])
         
         else:
-            raise ValueError
+            raise ValueError("Some odds columns are missing !")
 
     matches_results_df["Max H"] = matches_results_df[bookmakers_H].max(axis = 1)
     matches_results_df["Max D"] = matches_results_df[bookmakers_D].max(axis = 1)
@@ -125,6 +125,7 @@ def get_FIFA_ratings_df():
     return FIFA_ratings_df
 
 def get_divisions_dictionary(matches_results_df : pd.DataFrame , FIFA_ratings_df : pd.DataFrame):
+    print("\nCorrespondance des noms des championnats :\n")
     divisions1 = list(matches_results_df["Division"].unique())
     divisions2 = list(FIFA_ratings_df["league_name"].unique())
     divisions2.remove(np.nan)
@@ -154,8 +155,7 @@ def get_divisions_dictionary(matches_results_df : pd.DataFrame , FIFA_ratings_df
                 if k == corresponding_division:
                     print(k , "/" , v)
                     print(division1 , "/" , corresponding_division)
-                    print("\nCe nom de division est déjà attribué !")
-                raise ValueError
+                raise ValueError("This division has already been assigned !")
 
         print(corresponding_division , " / " , division1)
         divisions_dictionary[corresponding_division] = division1
@@ -194,6 +194,7 @@ def get_FIFA_ratings_selected_players_df(matches_results_df : pd.DataFrame , FIF
     return FIFA_ratings_selected_players_df
 
 def get_clubs_correlation_dictionary(matches_results_df : pd.DataFrame , FIFA_ratings_selected_players_df : pd.DataFrame):
+    print("\nNombre d'équipes dans les données de résultats de matchs VS nombre d'équipes dans les données FIFA :\n")
     seasons = matches_results_df["Season"].unique()
     seasons_dictionary = {}
 
@@ -205,13 +206,13 @@ def get_clubs_correlation_dictionary(matches_results_df : pd.DataFrame , FIFA_ra
             clubs_temp2 = list(matches_results_df[(matches_results_df["Division"] == division) & (matches_results_df["Season"] == season)]["away_team"].unique())
             clubs1 = set(clubs_temp1 + clubs_temp2)
             clubs2 = FIFA_ratings_selected_players_df[(FIFA_ratings_selected_players_df["division"] == division) & (FIFA_ratings_selected_players_df["Season"] == season)]["team"].unique()
-    
+
             print(season , division , len(clubs1) , len(clubs2))
 
             if len(clubs1) > len(clubs2):
-                raise ValueError("Certains clubs ne sont pas présents dans le jeu FIFA !")
+                raise ValueError("Some teams are not in FIFA !")
             elif len(clubs1) < len(clubs2):
-                raise ValueError("Attention, il manque les résultats de certaines équipes !")
+                raise ValueError("Results are missing for some teams !")
 
             clubs_dictionary = {}
 
@@ -247,7 +248,7 @@ def get_clubs_correlation_dictionary(matches_results_df : pd.DataFrame , FIFA_ra
                         if v == corresponding_club:
                             print(k , "/" , v)
                             print(club1 , "/" , corresponding_club)
-                            raise ValueError("Ce nom de club est déjà attribué !")
+                            raise ValueError("This team name has already been assigned !")
                 else:
                     clubs_dictionary[club1] = corresponding_club
             divisions_dictionary[division] = clubs_dictionary
@@ -268,7 +269,7 @@ async def initialize_tables(user = Depends(decode_token) , session = Depends(sta
     if user.get("rights") != "Administrator":
         raise HTTPException(
             status_code = status.HTTP_403_FORBIDDEN ,
-            detail = "You must be an administrator to perform this action." ,
+            detail = "You must be an administrator to perform this action !" ,
             headers = {"WWW-Authenticate": "Bearer"})
     reset_tables()
     create_tables(session = session)
@@ -282,4 +283,4 @@ async def initialize_tables(user = Depends(decode_token) , session = Depends(sta
     matches_results_corrected_df.to_sql("matches_results" , con = engine , if_exists = "append" , index = False)
     FIFA_ratings_selected_players_df.to_sql("FIFA" , con = engine , if_exists = "append" , index = False)
 
-    return "Les bases de données ont été réinitialisées avec succès !"
+    return "Databases have been succesfully initialized !"
