@@ -7,14 +7,10 @@ on:
 
 env:
   TEST: 1
-  MYSQL_ROOT_PASSWORD: Passw0rd+
 
 jobs:
   test:
-    runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:latest          
+    runs-on: ubuntu-latest     
           
     steps:
     - name: Checkout code
@@ -25,6 +21,7 @@ jobs:
       with:
         python-version: 3.11   
       
-    - name: Connect to MySQL
+    - name: MySQL
       run: |
-        mysql -u root -p${{ env.MYSQL_ROOT_PASSWORD }}
+        sudo apt install mysql-server
+        mysql -u root
