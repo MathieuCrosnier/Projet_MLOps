@@ -24,4 +24,5 @@ jobs:
     - name: MySQL
       run: |
         sudo apt install mysql-server
+        sudo service mysql start
         sudo mysql
