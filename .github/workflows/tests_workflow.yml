@@ -26,7 +26,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install pandas scikit-learn pytest fastapi httpx sqlalchemy pyjwt pyyaml mysql-connector-python python-multipart pymysql cryptography
         sudo service mysql start
-
+        echo "ALTER USER 'root'@'localhost' IDENTIFIED BY 'Passw0rd+'; FLUSH PRIVILEGES;"
+        mysql -u root -p${{ env.MYSQL_ROOT_PASSWORD }}
+        
     - name: Run pytest
       run: |
         cd Tests
