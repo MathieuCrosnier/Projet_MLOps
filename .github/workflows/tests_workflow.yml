@@ -27,6 +27,7 @@ jobs:
         pip install pandas scikit-learn pytest fastapi httpx sqlalchemy pyjwt pyyaml mysql-connector-python python-multipart pymysql cryptography
         mysql -V
         sudo service mysql start
+        sudo mysqld_safe --skip-grant-tables &
         sudo service mysql status
         mysql -u root
         sudo tail -f /var/log/mysql/error.log
