@@ -28,5 +28,7 @@ jobs:
         sudo /etc/init.d/mysql stop
         sudo mkdir /var/run/mysqld
         sudo chown mysql /var/run/mysqld
+        sudo /etc/init.d/mysql start
         sudo mysqld_safe --skip-grant-tables &
         sudo service mysql status
+        sudo mysql --user=root mysql
