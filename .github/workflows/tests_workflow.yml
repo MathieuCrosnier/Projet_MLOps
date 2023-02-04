@@ -23,8 +23,11 @@ jobs:
       with:
         python-version: 3.11
 
-    - name: Set up MySQL
-      uses: docker://mysql:latest        
+    - name: Pull MySQL Docker image
+      uses: docker://mysql:latest
+
+    - name: Start MySQL container
+      uses: docker://mysql:latest         
       
     - name: Connect to MySQL
       run: |
