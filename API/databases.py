@@ -1,5 +1,4 @@
-from sqlalchemy.orm import sessionmaker , Session
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker , Session , declarative_base
 from sqlalchemy import select , create_engine , inspect , Column , String , Float , Integer , Boolean , DateTime , text , exc
 from datetime import datetime , timezone
 import os
