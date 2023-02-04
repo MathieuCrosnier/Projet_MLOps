@@ -26,7 +26,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install pandas scikit-learn pytest fastapi httpx sqlalchemy pyjwt pyyaml mysql-connector-python python-multipart pymysql cryptography
         sudo service mysql start        
-        echo "UPDATE mysql.user SET authentication_string=PASSWORD('Passw0rd+'), password_expired='N' WHERE User='root' AND Host='localhost';" | sudo mysql --skip-grant-tables
+        echo "UPDATE mysql.user SET authentication_string=null WHERE User='root';flush privileges;ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'Passw0rd+';flush privileges;" | sudo mysql -u root
         sudo service mysql restart
 
     - name: Run pytest
