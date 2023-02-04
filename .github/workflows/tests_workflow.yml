@@ -30,6 +30,5 @@ jobs:
         sudo mkdir /var/run/mysqld
         sudo chown mysql /var/run/mysqld
         sudo mysqld_safe --skip-grant-tables&
-        sudo mysql --user=root mysql
-        UPDATE mysql.user SET authentication_string=null WHERE User='root';
-        flush privileges;
+        sudo service mysql status
+        ls -l /var/run/mysqld/mysqld.sock
