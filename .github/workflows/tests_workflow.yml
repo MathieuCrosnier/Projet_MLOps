@@ -24,5 +24,6 @@ jobs:
     - name: MySQL
       run: |
         sudo apt install mysql-server
-        sudo service mysql start
-        sudo mysql
+        sudo service mysql stop
+        sudo mysqld_safe –skip-grant-tables –skip-networking &
+        echo "use mysql;sudo mysql;update user set authentication_string=password('Passw0rd+') where user='root';flush privileges;" | mysql -u root
