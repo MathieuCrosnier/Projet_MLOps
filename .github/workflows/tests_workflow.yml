@@ -24,7 +24,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pytest fastapi httpx sqlalchemy pyjwt
+        pip install pytest fastapi httpx sqlalchemy pyjwt pyyaml
 
     - name: Run pytest
       run: |
