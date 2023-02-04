@@ -24,7 +24,4 @@ jobs:
     - name: MySQL
       run: |
         sudo apt install mysql-server
-        sudo mkdir /var/run/mysqld
-        sudo chown mysql /var/run/mysqld
-        sudo mysqld_safe --skip-grant-tables&
-        mysql -u root
+        sudo mysql
