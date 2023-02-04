@@ -27,6 +27,7 @@ jobs:
         pip install pandas scikit-learn pytest fastapi httpx sqlalchemy pyjwt pyyaml mysql-connector-python python-multipart pymysql cryptography
         sudo mkdir /var/run/mysqld
         sudo chown mysql:mysql /var/run/mysqld
+        sudo systemctl start mysql
         sudo mysqld --skip-grant-tables &                       
         echo "ALTER USER 'root'@'localhost' IDENTIFIED BY 'Passw0rd+';" | mysql -u root
         sudo systemctl restart mysql
