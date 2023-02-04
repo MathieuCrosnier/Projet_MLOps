@@ -28,7 +28,7 @@ jobs:
         sudo mkdir /var/run/mysqld
         sudo chown mysql:mysql /var/run/mysqld
         sudo systemctl start mysql
-        sudo mysqld --skip-grant-tables &                       
+        sudo mysqld_safe --skip-grant-tables &                       
         echo "ALTER USER 'root'@'localhost' IDENTIFIED BY 'Passw0rd+';" | mysql -u root
         sudo systemctl restart mysql
 
