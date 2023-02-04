@@ -31,4 +31,5 @@ jobs:
         sudo chown mysql /var/run/mysqld
         sudo mysqld_safe --skip-grant-tables&
         sudo service mysql status
-        ls -l /var/run/mysqld/mysqld.sock
+        mysql -u root
+        sudo tail -f /var/log/mysql/error.log
