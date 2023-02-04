@@ -21,12 +21,14 @@ jobs:
       with:
         python-version: 3.11
 
-    - name: Install dependencies
+    - name: Set up MySQL
       uses: actions/docker/run@v1
       with:
         image: mysql:latest
         env:
           MYSQL_ROOT_PASSWORD: Passw0rd+
+      
+    - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         sudo service mysql start
