@@ -27,6 +27,7 @@ jobs:
         pip install pytest
         pip install fastapi
         pip install httpx
+        pip install sqlalchemy
 
     - name: Run pytest
       run: |
