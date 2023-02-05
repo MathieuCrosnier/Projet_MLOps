@@ -27,4 +27,4 @@ jobs:
         sudo service mysql start
         ls /var/run/mysqld/
         sudo mysqld_safe --skip-grant-tables &
-        ls /var/run/mysqld/
+        sudo mysql --user=root mysql
