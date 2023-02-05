@@ -24,4 +24,10 @@ jobs:
     - name: MySQL
       run: |
         sudo apt install mysql-server
-        ls /etc/mysql/
+        sudo /etc/init.d/mysql stop
+        sudo mkdir /var/run/mysqld
+        sudo chown mysql /var/run/mysqld
+        echo "[mysqld]" >> /etc/mysql/my.cnf
+        echo "socket=/var/run/mysqld/mysql.sock" >> /etc/mysql/my.cnf
+        sudo mysqld_safe --skip-grant-tables &
+        sudo mysql -u root
