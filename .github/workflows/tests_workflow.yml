@@ -22,8 +22,7 @@ jobs:
         python-version: 3.11
 
     - name: Install MySQL
-      run: |        
-        sudo apt install mysql-server
+      run: |
         sudo /etc/init.d/mysql stop
         sudo mkdir /var/run/mysqld
         sudo chown mysql /var/run/mysqld
