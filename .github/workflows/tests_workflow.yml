@@ -11,12 +11,7 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql
-        env:
-          MYSQL_ROOT_PASSWORD: Passw0rd+
-          
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -24,9 +19,12 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: 3.11       
-      
-    - name: Connect to MySQL
-      run: |
-        sudo service mysql start
-        mysql -u root -p${{ env.MYSQL_ROOT_PASSWORD }}
+        python-version: 3.11
+
+    - name: Install MySQL
+      run: |        
+        sudo apt install mysql-server
+        systemctl status mysql
+        sudo systemctl start mysql
+        mysqladmin -u root password 'Passw0rd+'
+        mysql -u root -pPassw0rd+
