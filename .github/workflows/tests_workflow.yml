@@ -25,5 +25,8 @@ jobs:
       run: |        
         sudo apt install mysql-server        
         echo "ALTER USER 'root'@'localhost' IDENTIFIED BY 'MyNewPass';" >> /home/mysql-init
+        ll /home/mysql-init
+        cat /home/mysql-init
         chmod 777 /home/mysql-init
+        ll /home/mysql-init
         mysqld --init-file=/home/mysql-init &
