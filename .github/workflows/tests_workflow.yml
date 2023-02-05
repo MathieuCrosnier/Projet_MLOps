@@ -28,7 +28,7 @@ jobs:
     - name: Set MySQL
       run: |
         sudo service mysql start
-        echo "CREATE DATABASE production;CREATE DATABASE test;ALTER USER 'root'@'localhost' IDENTIFIED BY 'Passw0rd+';" | mysql -u root -proot
+        echo "CREATE DATABASE test;ALTER USER 'root'@'localhost' IDENTIFIED BY 'Passw0rd+';" | mysql -u root -proot
     
     - name: Run tests
       run: |
