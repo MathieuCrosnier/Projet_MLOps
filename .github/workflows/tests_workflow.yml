@@ -24,13 +24,5 @@ jobs:
     - name: MySQL
       run: |
         sudo apt install mysql-server
-        sudo service mysql start
-        ls /var/run/mysqld
-        cp /var/run/mysqld/mysqld.sock ~
-        sudo service mysql stop
         sudo mysqld_safe --skip-grant-tables &
-        mkdir /var/run/mysqld
-        sudo chown mysql /var/run/mysqld
-        cp ~/mysqld.sock /var/run/mysqld
-        ls /var/run/mysqld
-        sudo mysql --user=root mysql
+        systemctl list-dependencies mysql
