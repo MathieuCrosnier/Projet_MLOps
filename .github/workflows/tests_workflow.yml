@@ -19,9 +19,18 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: 3.11
+        python-version: latest
 
-    - name: Install MySQL
+    - name: Install libraries
+      run: |
+        pip install pandas scikit-learn pytest fastapi httpx sqlalchemy pyjwt pyyaml mysql-connector-python python-multipart pymysql cryptography
+        
+    - name: Set MySQL
       run: |
         sudo service mysql start
         echo "ALTER USER 'root'@'localhost' IDENTIFIED BY 'Passw0rd+';" | mysql -u root -proot
+    
+    - name: Run tests
+      run: |
+        cd Tests
+        pytest
