@@ -26,7 +26,7 @@ jobs:
         sudo apt install mysql-server
         sudo /etc/init.d/mysql stop
         echo "Liste dossiers"
-        ls /var/run/
         sudo mkdir /var/run/mysqld
         sudo chown mysql /var/run/mysqld
         sudo mysqld_safe --skip-grant-tables&
+        sudo service mysql status
