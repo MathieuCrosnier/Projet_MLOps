@@ -245,7 +245,7 @@ def get_team_info(team : str , home_or_away : str , season : str = "2022-2023"):
 
     return pd.concat([team_stats_df , temp_df])
 
-def get_prediction_input(home_team : str , away_team : str , home_odd_bookmaker : float , away_odd_bookmaker : float):
+def get_prediction_input(home_team : str , away_team : str):
     df_home = get_team_info(team = home_team , home_or_away = "home")
     df_away = get_team_info(team = away_team , home_or_away = "away")
     df_home.index = [x.replace("home_" , "") for x in df_home.index]
@@ -258,8 +258,8 @@ def get_prediction_input(home_team : str , away_team : str , home_odd_bookmaker 
     return df_scaled
 
 @router.post("/prediction" , name = "Get model prediction")
-async def prediction(home_team : str , away_team : str , home_odd_bookmaker : float , away_odd_bookmaker : float , game_date : str , user = Depends(decode_token) , session = Depends(start_session)):
-    game = get_prediction_input(home_team = home_team , away_team = away_team , home_odd_bookmaker = home_odd_bookmaker , away_odd_bookmaker = away_odd_bookmaker)
+async def prediction(home_team : str , away_team : str , game_date : str , user = Depends(decode_token) , session = Depends(start_session)):
+    game = get_prediction_input(home_team = home_team , away_team = away_team)
     probs = model.predict_proba(game)[0]
     odds = np.round(1 / probs , 2)
     game_date = datetime.strptime(game_date , "%Y-%m-%d")

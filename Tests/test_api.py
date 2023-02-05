@@ -74,12 +74,12 @@ def test_signup2():
     assert response.status_code == 200
     assert response.json() == "Your account has been created !"
 
-@pytest.mark.parametrize("params,user,status_code,json" , [({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "Grenoble Foot 38" , "home_odd_bookmaker" : 1.5 , "away_odd_bookmaker" : 3.5 , "game_date" : "2023-02-04"} , {"username" : "Micheline" , "password" : "Crobin"} , 401 , "Your session has expired !"),
-                                                           ({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "Grenoble Foot 38" , "home_odd_bookmaker" : 1.5 , "away_odd_bookmaker" : 3.5 , "game_date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "CROSNIER"} , 401 , "Your session has expired !"),
-                                                           ({"home_team" : "" , "away_team" : "Grenoble Foot 38" , "home_odd_bookmaker" : 1.5 , "away_odd_bookmaker" : 3.5 , "game_date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "Crosnier"} , 401 , "One of the teams you selected doesn't exist !"),
-                                                           ({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "" , "home_odd_bookmaker" : 1.5 , "away_odd_bookmaker" : 3.5 , "game_date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "Crosnier"} , 401 , "One of the teams you selected doesn't exist !"),
-                                                           ({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "Grenoble Foot 38" , "home_odd_bookmaker" : 1.5 , "away_odd_bookmaker" : 3.5 , "game_date" : "2023-02-04"} , {"username" : "Elsy" , "password" : "Barbin"} , 200 , None),
-                                                           ({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "Grenoble Foot 38" , "home_odd_bookmaker" : 1.5 , "away_odd_bookmaker" : 3.5 , "game_date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "Crosnier"} , 200 , None)])
+@pytest.mark.parametrize("params,user,status_code,json" , [({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "Grenoble Foot 38" , "game_date" : "2023-02-04"} , {"username" : "Micheline" , "password" : "Crobin"} , 401 , "Your session has expired !"),
+                                                           ({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "Grenoble Foot 38" , "game_date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "CROSNIER"} , 401 , "Your session has expired !"),
+                                                           ({"home_team" : "" , "away_team" : "Grenoble Foot 38" , "game_date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "Crosnier"} , 401 , "One of the teams you selected doesn't exist !"),
+                                                           ({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "" , "game_date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "Crosnier"} , 401 , "One of the teams you selected doesn't exist !"),
+                                                           ({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "Grenoble Foot 38" , "game_date" : "2023-02-04"} , {"username" : "Elsy" , "password" : "Barbin"} , 200 , None),
+                                                           ({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "Grenoble Foot 38" , "game_date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "Crosnier"} , 200 , None)])
 def test_prediction(params , user , status_code , json):
     token = client.post("/token" , data = user).json().get("access_token")
     response = client.post("prediction" , params = params , headers = {"Authorization": f"Bearer {token}"})
