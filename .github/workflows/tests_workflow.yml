@@ -25,6 +25,7 @@ jobs:
       run: |        
         sudo apt install mysql-server
         sudo echo "ALTER USER 'root'@'localhost' IDENTIFIED BY 'Passw0rd+';" >> /home/runner/work/mysql-init
-        sudo mysqld --init-file=/home/runner/work/mysql-init &
-        sudo service mysql start
+        sudo mysqld --init-file=/home/runner/work/mysql-init
+        sudo service mysql status
+        sudo service mysql restart
         mysql -u root -pPassw0rd+
