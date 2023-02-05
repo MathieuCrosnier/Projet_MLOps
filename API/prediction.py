@@ -5,6 +5,7 @@ from fastapi import APIRouter , Depends , HTTPException , status
 from pydantic import BaseModel
 from joblib import load
 from access import decode_token
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from databases import start_session , add_to_predictions_table , Predictions , select_engine
 from datetime import datetime , timezone
@@ -16,8 +17,10 @@ scaler = load("output_data/scaler.pkl")
 
 def get_team_info(team : str , home_or_away : str , season : str = "2022-2023"):
     engine = select_engine()
-    team_stats_df = pd.read_sql(sql = f"SELECT * FROM FIFA WHERE team = '{team}' AND season = '{season}'" , con = engine).drop(columns = ["id" , "season" , "division" , "team"])
-    team_results_df = pd.read_sql(sql = f"SELECT * FROM matches_results WHERE (home_team = '{team}' OR away_team = '{team}') AND season = '{season}'" , con = engine).sort_values(by = "date")
+    con = engine.connect()
+    team_stats_df = pd.read_sql(sql = text(f"SELECT * FROM FIFA WHERE team = '{team}' AND season = '{season}'") , con = con).drop(columns = ["id" , "season" , "division" , "team"])
+    team_results_df = pd.read_sql(sql = text(f"SELECT * FROM matches_results WHERE (home_team = '{team}' OR away_team = '{team}') AND season = '{season}'") , con = con).sort_values(by = "date")
+    con.close()
 
     if (team_stats_df.empty) or (team_results_df.empty):
         raise HTTPException(

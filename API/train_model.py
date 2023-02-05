@@ -1,8 +1,8 @@
 import pandas as pd
-from init_databases import get_clubs_correlation_dictionary
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 from fastapi import APIRouter , Depends , HTTPException , status
+from sqlalchemy import text
 from joblib import dump
 from access import decode_token
 from databases import select_engine
@@ -274,8 +274,10 @@ async def get_trained_model(user = Depends(decode_token) , engine = Depends(sele
             status_code = status.HTTP_403_FORBIDDEN ,
             detail = "You must be an administrator to perform this action !" ,
             headers = {"WWW-Authenticate": "Bearer"})
-    matches_results_corrected_df = pd.read_sql(sql = "SELECT * FROM matches_results", con = engine).drop(columns = "id")
-    FIFA_ratings_selected_players_df = pd.read_sql(sql = "SELECT * FROM FIFA", con = engine).drop(columns = "id")
+    con = engine.connect()
+    matches_results_corrected_df = pd.read_sql(sql = text("SELECT * FROM matches_results") , con = con).drop(columns = "id")
+    FIFA_ratings_selected_players_df = pd.read_sql(sql = text("SELECT * FROM FIFA") , con = con).drop(columns = "id")
+    con.close()
     ml_df = get_ml_df(matches_results_corrected_df = matches_results_corrected_df , FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df)
     train_model(ml_df)
 
