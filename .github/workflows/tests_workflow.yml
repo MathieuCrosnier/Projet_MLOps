@@ -24,10 +24,4 @@ jobs:
     - name: MySQL
       run: |
         sudo apt install mysql-server
-        sudo service mysql start
-        cd /var/run
-        sudo cp -rp ./mysqld ./mysqld.bak
-        sudo service mysql stop
-        sudo mv ./mysqld.bak ./mysqld
-        sudo mysqld_safe –skip-grant-tables –skip-networking &
-        echo "UPDATE mysql.user SET authentication_string=null WHERE User='root';flush privileges;ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'Passw0rd+';flush privileges;" | mysql -u root
+        ls /etc/mysql/
