@@ -252,7 +252,6 @@ def get_prediction_input(home_team : str , away_team : str , home_odd_bookmaker 
     df_away.index = [x.replace("away_" , "") for x in df_away.index]
     pd.concat([df_home , df_away] , axis = 1).to_csv("output_data/prediction_input.csv")
     df = df_home - df_away
-    df["Cote"] = away_odd_bookmaker - home_odd_bookmaker
     df = df.to_frame().transpose()
     scaler = load("output_data/scaler.pkl")
     df_scaled = pd.DataFrame(scaler.transform(df) , index = df.index , columns = df.columns)

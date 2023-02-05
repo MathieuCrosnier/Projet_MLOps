@@ -240,7 +240,6 @@ def get_ml_df(matches_results_corrected_df : pd.DataFrame , FIFA_ratings_selecte
     df_home.columns = [x.replace("home_" , "") for x in df_home.columns]
     df_away.columns = [x.replace("away_" , "") for x in df_away.columns]
     df = df_matches_results.join(df_home - df_away)
-    df["Cote"] = df["max_A"] - df["max_H"]
     df = df.reset_index(drop = True)
 
     df.to_csv("output_data/complete_dataset.csv" , index = False)
