@@ -23,10 +23,5 @@ jobs:
 
     - name: Install MySQL
       run: |
-        sudo /etc/init.d/mysql stop
-        sudo mkdir /var/run/mysqld
-        sudo chown mysql /var/run/mysqld
-        sudo mysqld_safe --skip-grant-tables&
-        echo "Fichier log"
-        cat /var/log/mysql/error.log
-        sudo mysql --user=root mysql
+        sudo service mysql start
+        mysql -u root -proot
