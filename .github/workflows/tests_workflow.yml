@@ -24,6 +24,5 @@ jobs:
     - name: Install MySQL
       run: |        
         sudo apt install mysql-server
-        sudo systemctl start mysql
-        mysqladmin -u root password 'Passw0rd+'
-        mysql -u root -pPassw0rd+
+        kill `cat /mysql-data-directory/host_name.pid`
+        cd /home
