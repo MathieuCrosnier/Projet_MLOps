@@ -24,14 +24,6 @@ jobs:
     - name: Install MySQL
       run: |        
         sudo apt install mysql-server
-        pwd
-        echo "Dossier n°1"
-        ls -l ..
-        echo "Dossier n°2"
-        ls -l ../..
-        sudo echo "ALTER USER 'root'@'localhost' IDENTIFIED BY 'MyNewPass';" >> /home/mysql-init
-        ll /home/mysql-init
-        cat /home/mysql-init
-        chmod 777 /home/mysql-init
-        ll /home/mysql-init
-        mysqld --init-file=/home/mysql-init &
+        sudo echo "ALTER USER 'root'@'localhost' IDENTIFIED BY 'MyNewPass';" >> /home/runner/work/mysql-init
+        cat /home/runner/work/mysql-init
+        mysqld --init-file=/home/runner/work/mysql-init &
