@@ -28,5 +28,6 @@ jobs:
         sudo mkdir /var/run/mysqld
         sudo chown mysql /var/run/mysqld
         sudo mysqld_safe --skip-grant-tables &
-        cat /etc/mysql/mysql.conf.d/mysqld.cnf
+        ls /var/run/mysqld/
+        cat var/lib/mysql
         sudo mysql -u root
