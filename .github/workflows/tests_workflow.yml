@@ -7,10 +7,15 @@ on:
 
 env:
   TEST: 1
+  MYSQL_ROOT_PASSWORD: Passw0rd+
+  MYSQL_ALLOW_EMPTY_PASSWORD: yes
 
 jobs:
   test:
-    runs-on: ubuntu-latest     
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql          
           
     steps:
     - name: Checkout code
@@ -19,10 +24,8 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: 3.11   
+        python-version: 3.11       
       
-    - name: MySQL
+    - name: Connect to MySQL
       run: |
-        sudo apt install mysql-server
-        sudo mysqld_safe --skip-grant-tables &
-        systemctl list-dependencies mysql
+        mysql -u root -p${{ env.MYSQL_ROOT_PASSWORD }}
