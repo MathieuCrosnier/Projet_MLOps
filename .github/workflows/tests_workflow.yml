@@ -24,7 +24,6 @@ jobs:
     - name: Install MySQL
       run: |        
         sudo apt install mysql-server
-        systemctl status mysql
         sudo systemctl start mysql
         mysqladmin -u root password 'Passw0rd+'
         mysql -u root -pPassw0rd+
