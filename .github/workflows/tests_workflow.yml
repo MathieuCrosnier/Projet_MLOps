@@ -23,9 +23,8 @@ jobs:
 
     - name: Install MySQL
       run: |        
-        sudo apt install mysql-server        
-        ls /home
-        ll /home
+        sudo apt install mysql-server
+        ls -l ~
         sudo echo "ALTER USER 'root'@'localhost' IDENTIFIED BY 'MyNewPass';" >> /home/mysql-init
         ll /home/mysql-init
         cat /home/mysql-init
