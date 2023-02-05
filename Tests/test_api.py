@@ -29,7 +29,7 @@ def test_home():
 @pytest.mark.parametrize("params,status_code,json" , [({"username" : "Elsy" , "password" : "Barbin"} , 200 , "Your account has been created !"),
                                                       ({"username" : "Elsy" , "password" : "Crosnier"} , 401 , {'detail': "The username already exists !"}),
                                                       ({"username" : "" , "password" : ""} , 401 , {'detail': "Username or password can't be empty !"})])
-def test_signup(params , status_code , json):
+def test_signup1(params , status_code , json):
     response = client.post("/signup" , params = params)
     assert response.status_code == status_code
     assert response.json() == json
@@ -68,6 +68,11 @@ def test_initialize_databases(user , status_code , json):
     response = client.post("/initialize_databases" , headers = {"Authorization" : f"Bearer {token}"})
     assert response.status_code == status_code
     assert response.json() == json
+
+def test_signup2():
+    response = client.post("/signup" , params = {"username" : "Elsy" , "password" : "Barbin"})
+    assert response.status_code == 200
+    assert response.json() == "Your account has been created !"
 
 @pytest.mark.parametrize("params,user,status_code,json" , [({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "Grenoble Foot 38" , "home_odd_bookmaker" : 1.5 , "away_odd_bookmaker" : 3.5 , "game_date" : "2023-02-04"} , {"username" : "Micheline" , "password" : "Crobin"} , 401 , "Your session has expired !"),
                                                            ({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "Grenoble Foot 38" , "home_odd_bookmaker" : 1.5 , "away_odd_bookmaker" : 3.5 , "game_date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "CROSNIER"} , 401 , "Your session has expired !"),
