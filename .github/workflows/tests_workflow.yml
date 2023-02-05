@@ -24,4 +24,4 @@ jobs:
     - name: Install MySQL
       run: |
         sudo service mysql start
-        mysql -u root -proot
+        echo "ALTER USER 'root'@'localhost' IDENTIFIED BY 'Passw0rd+';" | mysql -u root -proot
