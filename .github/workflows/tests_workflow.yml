@@ -28,4 +28,4 @@ jobs:
       
     - name: Connect to MySQL
       run: |
-        mysql -u root -p${{ env.MYSQL_ROOT_PASSWORD }}
+        sudo service mysql status
