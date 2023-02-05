@@ -7,15 +7,15 @@ on:
 
 env:
   TEST: 1
-  MYSQL_ROOT_PASSWORD: Passw0rd+
-  MYSQL_ALLOW_EMPTY_PASSWORD: yes
 
 jobs:
   test:
     runs-on: ubuntu-latest
     services:
       mysql:
-        image: mysql          
+        image: mysql
+        env:
+          MYSQL_ROOT_PASSWORD: Passw0rd+
           
     steps:
     - name: Checkout code
@@ -29,3 +29,4 @@ jobs:
     - name: Connect to MySQL
       run: |
         sudo service mysql status
+        mysql -u root -p${{ env.MYSQL_ROOT_PASSWORD }}
