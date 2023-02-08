@@ -5,7 +5,7 @@ from fastapi import APIRouter , Depends , HTTPException , status
 from sqlalchemy import text
 from joblib import dump
 from access import decode_token
-from databases import select_engine
+from databases import select_engine , select_output_data_folder
 
 router = APIRouter(tags = ["Training"])
 
@@ -231,7 +231,8 @@ def get_ml_df(matches_results_corrected_df : pd.DataFrame , FIFA_ratings_selecte
                     raise ValueError("There is a problem with the team name !")
 
     temp_df = temp_df.reset_index(drop = True)
-    temp_df.to_csv("output_data/temp_df.csv" , index = False)
+    output_data_folder = select_output_data_folder()
+    temp_df.to_csv(f"{output_data_folder}/temp_df.csv" , index = False)
     df_matches_results_columns = ["season" , "division" , "date" , "home_team" , "away_team" , "full_time_home_goals" , "full_time_away_goals" , "home_shots" , "away_shots" , "home_shots_on_target" , "away_shots_on_target" , "home_fouls" , "away_fouls" , "home_corners" , "away_corners" , "home_yellows" , "away_yellows" , "home_reds" , "away_reds" , "max_H" , "max_D" , "max_A" , "full_time_result"]
     df_matches_results = temp_df[df_matches_results_columns]
     temp_df = temp_df.drop(columns = df_matches_results.columns)
@@ -242,13 +243,13 @@ def get_ml_df(matches_results_corrected_df : pd.DataFrame , FIFA_ratings_selecte
     df = df_matches_results.join(df_home - df_away)
     df = df.reset_index(drop = True)
 
-    df.to_csv("output_data/complete_dataset.csv" , index = False)
+    df.to_csv(f"{output_data_folder}/complete_dataset.csv" , index = False)
 
     df = df.drop(columns = df_matches_results.columns.drop("full_time_result"))
     df = df.reset_index(drop = True)
     print(f"\nLe dataframe comporte {df.shape[0]} matches.")
     print(f"\nLe dataframe comporte {df.isna().sum().sum()} valeurs manquantes.")
-    df.to_csv("output_data/final_dataset.csv" , index = False)
+    df.to_csv(f"{output_data_folder}/final_dataset.csv" , index = False)
 
     return df
 
@@ -257,12 +258,13 @@ def train_model(ml_df : pd.DataFrame):
     y_train = ml_df["full_time_result"]
     scaler = StandardScaler().fit(X_train)
     X_train_scaled = pd.DataFrame(scaler.transform(X_train) , index = X_train.index , columns = X_train.columns)
-    X_train.to_csv("output_data/X_train.csv")
-    X_train_scaled.to_csv("output_data/X_train_scaled.csv")
+    output_data_folder = select_output_data_folder()
+    X_train.to_csv(f"{output_data_folder}/X_train.csv")
+    X_train_scaled.to_csv(f"{output_data_folder}/X_train_scaled.csv")
     model = KNeighborsClassifier(n_neighbors = 134)
     model.fit(X_train_scaled , y_train)
-    dump(model , "output_data/model.pkl")
-    dump(scaler , "output_data/scaler.pkl")
+    dump(model , f"{output_data_folder}/model.pkl")
+    dump(scaler , f"{output_data_folder}/scaler.pkl")
     
     return
 

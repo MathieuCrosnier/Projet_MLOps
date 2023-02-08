@@ -79,6 +79,14 @@ class MatchesResults(MatchesResultsBase):
 with open("parameters.yml", "r") as stream:
     parameters = yaml.safe_load(stream)
 
+def select_output_data_folder():
+    if os.environ.get("TEST") == "1":
+        output_data_folder = parameters.get("database").get("test").get("OUTPUT_FOLDER")           
+    else:
+        output_data_folder = parameters.get("database").get("production").get("OUTPUT_FOLDER")
+    
+    return output_data_folder
+
 def select_engine():
     if os.environ.get("TEST") == "1":
         config =  parameters.get("database").get("test")

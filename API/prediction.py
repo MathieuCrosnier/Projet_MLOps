@@ -7,13 +7,14 @@ from joblib import load
 from access import decode_token
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-from databases import start_session , add_to_predictions_table , Predictions , select_engine
+from databases import start_session , add_to_predictions_table , Predictions , select_engine , select_output_data_folder
 from datetime import datetime , timezone
 
 router = APIRouter(tags = ["Prediction"])
 
-model = load("output_data/model.pkl")
-scaler = load("output_data/scaler.pkl")
+output_data_folder = select_output_data_folder()
+model = load(f"{output_data_folder}/model.pkl")
+scaler = load(f"{output_data_folder}/scaler.pkl")
 
 def get_team_info(team : str , home_or_away : str , season : str = "2022-2023"):
     engine = select_engine()
@@ -250,10 +251,11 @@ def get_prediction_input(home_team : str , away_team : str):
     df_away = get_team_info(team = away_team , home_or_away = "away")
     df_home.index = [x.replace("home_" , "") for x in df_home.index]
     df_away.index = [x.replace("away_" , "") for x in df_away.index]
-    pd.concat([df_home , df_away] , axis = 1).to_csv("output_data/prediction_input.csv")
+    output_data_folder = select_output_data_folder()
+    pd.concat([df_home , df_away] , axis = 1).to_csv(f"{output_data_folder}/prediction_input.csv")
     df = df_home - df_away
     df = df.to_frame().transpose()
-    scaler = load("output_data/scaler.pkl")
+    scaler = load(f"{output_data_folder}/scaler.pkl")
     df_scaled = pd.DataFrame(scaler.transform(df) , index = df.index , columns = df.columns)
     return df_scaled
 
