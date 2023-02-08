@@ -4,7 +4,7 @@ from os import listdir
 import re
 from fastapi import APIRouter , Depends , HTTPException , status
 from access import decode_token
-from databases import reset_tables , create_tables , start_session , select_engine
+from databases import reset_tables , create_tables , start_session , select_engine , select_output_data_folder
 
 router = APIRouter(tags = ["Databases"])
 
@@ -189,7 +189,8 @@ def get_FIFA_ratings_selected_players_df(matches_results_df : pd.DataFrame , FIF
       
     FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df.rename(columns = dictionary)
     FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df.reset_index(drop = True)
-    FIFA_ratings_selected_players_df.to_csv("output_data/FIFA_teams_ratings.csv" , index = False)
+    output_data_folder = select_output_data_folder()
+    FIFA_ratings_selected_players_df.to_csv(f"{output_data_folder}/FIFA_teams_ratings.csv" , index = False)
 
     return FIFA_ratings_selected_players_df
 
@@ -261,7 +262,8 @@ def replace_clubs_names(matches_results_df : pd.DataFrame , clubs_correlation_di
         for division in matches_results_df[matches_results_df["Season"] == season]["Division"].unique():
             matches_results_df.loc[(matches_results_df["Season"] == season) & (matches_results_df["Division"] == division) , "home_team"] = matches_results_df[(matches_results_df["Season"] == season) & (matches_results_df["Division"] == division)]["home_team"].apply(lambda x: clubs_correlation_dictionary[season][division][x])
             matches_results_df.loc[(matches_results_df["Season"] == season) & (matches_results_df["Division"] == division) , "away_team"] = matches_results_df[(matches_results_df["Season"] == season) & (matches_results_df["Division"] == division)]["away_team"].apply(lambda x: clubs_correlation_dictionary[season][division][x])
-    matches_results_df.to_csv("output_data/matches_results.csv" , index = False)
+    output_data_folder = select_output_data_folder()
+    matches_results_df.to_csv(f"{output_data_folder}/matches_results.csv" , index = False)
     return matches_results_df
 
 @router.post("/initialize_databases" , name = "Initialize databases")
