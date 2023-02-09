@@ -1,0 +1,26 @@
+services:   
+  mysql:
+    image: mysql:latest
+    container_name: mysql_container
+    environment:
+      - MYSQL_ROOT_PASSWORD=Passw0rd+
+    ports:
+      - 3306:3306
+    volumes:
+      - /home/crocro/mysql:/var/lib/mysql 
+    healthcheck:
+            test: mysqladmin ping -h localhost -u root --password=$$MYSQL_ROOT_PASSWORD
+            interval: 30s
+
+  api:
+    image: image_api:latest
+    container_name: api_container
+    environment:
+      - DOCKER=1
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - 8000:8000
+    volumes:
+      - /mnt/c/Users/matcr/Documents/GitHub/Projet_MLOps/API/output_data:/output_data
