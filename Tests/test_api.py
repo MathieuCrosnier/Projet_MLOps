@@ -7,6 +7,7 @@ from sqlalchemy.orm import sessionmaker
 
 sys.path.append(os.path.abspath("../API"))
 os.chdir(os.path.abspath("../API"))
+os.environ["TEST"] = "1"
 
 from main import api
 from databases import Users , select_engine , UsersBase , add_to_users_table

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import sessionmaker , Session , declarative_base
-from sqlalchemy import select , create_engine , inspect , Column , String , Float , Integer , Boolean , DateTime , text , exc
+from sqlalchemy import select , create_engine , inspect , Column , String , Float , Integer , Boolean , DateTime , text , Engine
 from datetime import datetime , timezone
 import os
 import yaml
@@ -87,12 +87,31 @@ def select_output_data_folder():
     
     return output_data_folder
 
+def check_databases(engine : Engine , database : str):
+    conn = engine.connect()
+    query = text("SHOW DATABASES")
+    result = conn.execute(query)
+    databases = [row[0] for row in result.fetchall()]
+    if database not in databases:
+        query = text(f"CREATE DATABASE {database}")
+        conn.execute(query)
+        conn.close()
+
 def select_engine():
     if os.environ.get("TEST") == "1":
         config =  parameters.get("database").get("test")
+        engine = create_engine(f'mysql+pymysql://{config.get("MYSQL_USER")}:{config.get("MYSQL_PASSWORD")}@{config.get("MYSQL_HOST")}')
+        check_databases(engine = engine , database = config.get("MYSQL_DB"))
         engine = create_engine(f'mysql+pymysql://{config.get("MYSQL_USER")}:{config.get("MYSQL_PASSWORD")}@{config.get("MYSQL_HOST")}/{config.get("MYSQL_DB")}')   
+    elif os.environ.get("DOCKER") == "1":
+        config =  parameters.get("database").get("production").get("docker")
+        engine = create_engine(f'mysql+pymysql://{config.get("MYSQL_USER")}:{config.get("MYSQL_PASSWORD")}@{config.get("MYSQL_HOST")}')
+        check_databases(engine = engine , database = config.get("MYSQL_DB"))
+        engine = create_engine(f'mysql+pymysql://{config.get("MYSQL_USER")}:{config.get("MYSQL_PASSWORD")}@{config.get("MYSQL_HOST")}/{config.get("MYSQL_DB")}')
     else:
-        config =  parameters.get("database").get("production")
+        config =  parameters.get("database").get("production").get("standard")
+        engine = create_engine(f'mysql+pymysql://{config.get("MYSQL_USER")}:{config.get("MYSQL_PASSWORD")}@{config.get("MYSQL_HOST")}')
+        check_databases(engine = engine , database = config.get("MYSQL_DB"))
         engine = create_engine(f'mysql+pymysql://{config.get("MYSQL_USER")}:{config.get("MYSQL_PASSWORD")}@{config.get("MYSQL_HOST")}/{config.get("MYSQL_DB")}')
     
     return engine

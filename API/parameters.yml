@@ -2,9 +2,20 @@ database:
   production:
     MYSQL_USER: root
     MYSQL_PASSWORD: Passw0rd+
-    MYSQL_HOST: localhost
     MYSQL_DB: production
-    OUTPUT_FOLDER: output_data/production    
+    OUTPUT_FOLDER: output_data/production
+    standard:
+      MYSQL_USER: root
+      MYSQL_PASSWORD: Passw0rd+
+      MYSQL_DB: production
+      OUTPUT_FOLDER: output_data/production
+      MYSQL_HOST: localhost
+    docker:
+      MYSQL_USER: root
+      MYSQL_PASSWORD: Passw0rd+
+      MYSQL_DB: production
+      OUTPUT_FOLDER: output_data/production
+      MYSQL_HOST: mysql_container
   test:
     MYSQL_USER: root
     MYSQL_PASSWORD: Passw0rd+
