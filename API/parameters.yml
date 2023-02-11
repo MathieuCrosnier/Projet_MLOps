@@ -1,27 +1,23 @@
 database:
   production:
-    MYSQL_USER: root
-    MYSQL_PASSWORD: Passw0rd+
-    MYSQL_DB: production
-    OUTPUT_FOLDER: output_data/production
     standard:
       MYSQL_USER: root
       MYSQL_PASSWORD: Passw0rd+
       MYSQL_DB: production
-      OUTPUT_FOLDER: output_data/production
+      OUTPUT_FOLDER: output_data
       MYSQL_HOST: localhost
     docker:
       MYSQL_USER: root
       MYSQL_PASSWORD: Passw0rd+
       MYSQL_DB: production
-      OUTPUT_FOLDER: output_data/production
+      OUTPUT_FOLDER: output_data
       MYSQL_HOST: mysql_container
   test:
     MYSQL_USER: root
     MYSQL_PASSWORD: Passw0rd+
     MYSQL_HOST: localhost
     MYSQL_DB: test
-    OUTPUT_FOLDER: output_data/test
+    OUTPUT_FOLDER: output_data_test
 jwt:
   SECRET_KEY: 9290a6c64b338dcb7cc17afe83310e284e976670d07580799b35f86ba0bab74a
   ALGORITHM: HS256

@@ -7,7 +7,7 @@ services:
     ports:
       - 3306:3306
     volumes:
-      - /home/crocro/mysql:/var/lib/mysql 
+      - databases:/var/lib/mysql 
     healthcheck:
             test: mysqladmin ping -h localhost -u root --password=$$MYSQL_ROOT_PASSWORD
             interval: 30s
@@ -23,4 +23,8 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - /mnt/c/Users/matcr/Documents/GitHub/Projet_MLOps/API/output_data:/output_data
+      - output_data:/home/API/output_data
+
+volumes:
+  databases:
+  output_data:
