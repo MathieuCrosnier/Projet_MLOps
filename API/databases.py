@@ -82,9 +82,14 @@ with open("parameters.yml", "r") as stream:
 def select_output_data_folder():
     if os.environ.get("TEST") == "1":
         output_data_folder = parameters.get("database").get("test").get("OUTPUT_FOLDER")           
+    elif os.environ.get("DOCKER") == "1":
+        output_data_folder = parameters.get("database").get("production").get("docker").get("OUTPUT_FOLDER")
     else:
-        output_data_folder = parameters.get("database").get("production").get("OUTPUT_FOLDER")
+        output_data_folder = parameters.get("database").get("production").get("standard").get("OUTPUT_FOLDER")
     
+    if output_data_folder not in os.listdir():
+        os.mkdir(output_data_folder)
+        
     return output_data_folder
 
 def check_databases(engine : Engine , database : str):

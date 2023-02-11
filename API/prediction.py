@@ -12,10 +12,6 @@ from datetime import datetime , timezone
 
 router = APIRouter(tags = ["Prediction"])
 
-output_data_folder = select_output_data_folder()
-model = load(f"{output_data_folder}/model.pkl")
-scaler = load(f"{output_data_folder}/scaler.pkl")
-
 def get_team_info(team : str , home_or_away : str , season : str = "2022-2023"):
     engine = select_engine()
     con = engine.connect()
@@ -255,13 +251,27 @@ def get_prediction_input(home_team : str , away_team : str):
     pd.concat([df_home , df_away] , axis = 1).to_csv(f"{output_data_folder}/prediction_input.csv")
     df = df_home - df_away
     df = df.to_frame().transpose()
-    scaler = load(f"{output_data_folder}/scaler.pkl")
+    try:
+        scaler = load(f"{output_data_folder}/scaler.pkl")
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code = status.HTTP_403_FORBIDDEN ,
+            detail = "Your model is not trained !"
+        )
     df_scaled = pd.DataFrame(scaler.transform(df) , index = df.index , columns = df.columns)
     return df_scaled
 
 @router.post("/prediction" , name = "Get model prediction")
 async def prediction(home_team : str , away_team : str , game_date : str , user = Depends(decode_token) , session = Depends(start_session)):
     game = get_prediction_input(home_team = home_team , away_team = away_team)
+    output_data_folder = select_output_data_folder()
+    try:
+        model = load(f"{output_data_folder}/model.pkl")
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code = status.HTTP_403_FORBIDDEN ,
+            detail = "Your model is not trained !"
+        )
     probs = model.predict_proba(game)[0]
     odds = np.round(1 / probs , 2)
     game_date = datetime.strptime(game_date , "%Y-%m-%d")

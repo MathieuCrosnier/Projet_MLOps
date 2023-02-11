@@ -7,6 +7,10 @@ from databases import create_tables , select_engine
 from sqlalchemy.orm import sessionmaker
 
 api = FastAPI(title = "API SportsBetPy")
+api.include_router(access.router)
+api.include_router(prediction.router)
+api.include_router(init_databases.router)
+api.include_router(train_model.router)
 
 @api.on_event("startup")
 async def create_tables_on_startup():
@@ -19,8 +23,3 @@ async def create_tables_on_startup():
 @api.get("/" , name = "Welcome message" , tags = ["Home page"])
 async def welcome_message():
     return "Bienvenue sur l'API de SportsBetPy"
-
-api.include_router(access.router)
-api.include_router(prediction.router)
-api.include_router(init_databases.router)
-api.include_router(train_model.router)
