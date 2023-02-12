@@ -28,7 +28,7 @@ jobs:
     - name: Set MySQL
       run: |
         sudo service mysql start
-        echo "ALTER USER 'root'@'localhost' IDENTIFIED BY ${{ secrets.MYSQL_PASSWORD }};" | mysql -u root -proot
+        echo "ALTER USER 'root'@'localhost' IDENTIFIED BY '${{ secrets.NEW_MYSQL_PASSWORD }}';" | mysql -u root -p${{ secrets.OLD_MYSQL_PASSWORD }}
     
     - name: Run tests
       run: |
