@@ -1,6 +1,5 @@
 from sqlalchemy.orm import sessionmaker , Session , declarative_base
-from sqlalchemy import select , create_engine , inspect , Column , String , Float , Integer , Boolean , DateTime , text , Engine
-from datetime import datetime , timezone
+from sqlalchemy import select , create_engine , Column , String , Float , Integer , Boolean , DateTime , text , Engine , UniqueConstraint
 import os
 import yaml
 
@@ -47,6 +46,7 @@ class FIFA(FIFABase):
     dribbling = Column(Float , nullable = False)
     defending = Column(Float , nullable = False)
     physic = Column(Float , nullable = False)
+    UniqueConstraint(season , division , team)
 
 class MatchesResults(MatchesResultsBase):
     __tablename__ = "matches_results"
@@ -75,6 +75,7 @@ class MatchesResults(MatchesResultsBase):
     max_D = Column(Float , nullable = False)
     max_A = Column(Float , nullable = False)
     full_time_result = Column(String(1) , nullable = False)
+    UniqueConstraint(season , division , home_team , away_team , date)
 
 with open("parameters.yml", "r") as stream:
     parameters = yaml.safe_load(stream)
@@ -142,21 +143,15 @@ def add_to_predictions_table(prediction : Predictions , session : Session):
     session.add(prediction)
     session.commit()
 
-def reset_tables():
+def reset_tables_matchesresults_and_fifa():
     engine = select_engine()
     MatchesResultsBase.metadata.drop_all(engine)
     FIFABase.metadata.drop_all(engine)
-    UsersBase.metadata.drop_all(engine)
-    PredictionsBase.metadata.drop_all(engine)
 
-def create_tables(session : Session):
+def reset_table_users():
     engine = select_engine()
-    if not inspect(engine).has_table("users") :
-        UsersBase.metadata.create_all(bind = engine)
-        add_to_users_table(Users(username = "Mathieu", password = "Crosnier", is_admin = 1 , registered_date = datetime.now(timezone.utc)) , session = session)
-    if not inspect(engine).has_table("predictions") :
-        PredictionsBase.metadata.create_all(bind = engine)
-    if not inspect(engine).has_table("FIFA") :
-        FIFABase.metadata.create_all(bind = engine)
-    if not inspect(engine).has_table("matches_results") :
-        MatchesResultsBase.metadata.create_all(bind = engine)
+    UsersBase.metadata.drop_all(engine)
+
+def reset_table_predictions():
+    engine = select_engine()
+    PredictionsBase.metadata.drop_all(engine)

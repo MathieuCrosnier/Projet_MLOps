@@ -63,10 +63,30 @@ def test_user2(user , status_code , json):
 @pytest.mark.parametrize("user,status_code,json" , [({"username" : "Micheline" , "password" : "Crobin"} , 401 , {'detail' : 'Your session has expired !'}),
                                                     ({"username" : "Mathieu" , "password" : "CROSNIER"} , 401 , {'detail' : 'Your session has expired !'}),
                                                     ({"username" : "Elsy" , "password" : "Barbin"} , 403 , {'detail' : 'You must be an administrator to perform this action !'}),
-                                                    ({"username" : "Mathieu" , "password" : "Crosnier"} , 200 , 'Databases have been succesfully initialized !')])
-def test_initialize_databases(user , status_code , json):
+                                                    ({"username" : "Mathieu" , "password" : "Crosnier"} , 200 , 'Tables MatchesResults and FIFA have been succesfully initialized !')])
+def test_initialize_tables_matchesresults_and_fifa(user , status_code , json):
     token = client.post("/token" , data = user).json().get("access_token")
-    response = client.post("/initialize_databases" , headers = {"Authorization" : f"Bearer {token}"})
+    response = client.post("/initialize_tables_matchesresults_and_fifa" , headers = {"Authorization" : f"Bearer {token}"})
+    assert response.status_code == status_code
+    assert response.json() == json
+
+@pytest.mark.parametrize("user,status_code,json" , [({"username" : "Micheline" , "password" : "Crobin"} , 401 , {'detail' : 'Your session has expired !'}),
+                                                    ({"username" : "Mathieu" , "password" : "CROSNIER"} , 401 , {'detail' : 'Your session has expired !'}),
+                                                    ({"username" : "Elsy" , "password" : "Barbin"} , 403 , {'detail' : 'You must be an administrator to perform this action !'}),
+                                                    ({"username" : "Mathieu" , "password" : "Crosnier"} , 200 , 'Table Predictions has been succesfully initialized !')])
+def test_initialize_table_predictions(user , status_code , json):
+    token = client.post("/token" , data = user).json().get("access_token")
+    response = client.post("/initialize_table_predictions" , headers = {"Authorization" : f"Bearer {token}"})
+    assert response.status_code == status_code
+    assert response.json() == json
+
+@pytest.mark.parametrize("user,status_code,json" , [({"username" : "Micheline" , "password" : "Crobin"} , 401 , {'detail' : 'Your session has expired !'}),
+                                                    ({"username" : "Mathieu" , "password" : "CROSNIER"} , 401 , {'detail' : 'Your session has expired !'}),
+                                                    ({"username" : "Elsy" , "password" : "Barbin"} , 403 , {'detail' : 'You must be an administrator to perform this action !'}),
+                                                    ({"username" : "Mathieu" , "password" : "Crosnier"} , 200 , 'Table Users has been succesfully initialized !')])
+def test_initialize_table_users(user , status_code , json):
+    token = client.post("/token" , data = user).json().get("access_token")
+    response = client.post("/initialize_table_users" , headers = {"Authorization" : f"Bearer {token}"})
     assert response.status_code == status_code
     assert response.json() == json
 

@@ -4,29 +4,32 @@ from os import listdir
 import re
 from fastapi import APIRouter , Depends , HTTPException , status
 from access import decode_token
-from databases import reset_tables , create_tables , start_session , select_engine , select_output_data_folder
+from databases import MatchesResultsBase , FIFABase , UsersBase , PredictionsBase , Users , add_to_users_table , reset_tables_matchesresults_and_fifa , reset_table_users , reset_table_predictions , start_session , select_engine , select_output_data_folder
+from sqlalchemy.orm import Session
+from sqlalchemy import inspect
+from datetime import datetime , timezone
 
 router = APIRouter(tags = ["Databases"])
 
-def get_matches_results_df():
+def get_matches_results_df(seasons : list):
     input_data_address = "input_data/matches_results/"
     matches_results_df = pd.DataFrame()
     print("\nLa liste des fichiers traités est la suivante :\n")
-    for folder in listdir(input_data_address):
+    for folder in seasons:
 
         for file in listdir(input_data_address + "/" + folder):
             print(folder + "/" + file)
             df = pd.read_csv(input_data_address + folder + "/" + file , encoding = 'unicode_escape')
     
             if "Season" in list(df.columns):
-                df["Season"] = file.replace(".csv" , "")
+                df["Season"] = folder
             else:
-                df.insert(0 , "Season" , file.replace(".csv" , ""))
+                df.insert(0 , "Season" , folder)
     
             if "HFKC" in list(df.columns):
                 df = df.rename(columns = {"HFKC" : "HF" , "AFKC" : "AF"})
     
-            df["Div"] = folder.replace("_" , " ")
+            df["Div"] = file.strip(".csv").replace("_" , " ")
             matches_results_df = pd.concat([matches_results_df , df])
     
     matches_results_df = matches_results_df.reset_index(drop = True)    
@@ -35,9 +38,11 @@ def get_matches_results_df():
     bookmakers_list = ["B365H" , "B365D" , "B365A" , "BWH" , "BWD" , "BWA" , "IWH" , "IWD" , "IWA" , "LBH" , "LBD" , "LBA" , "PSH" , "PSD" , "PSA" , "SJH" , "SJD" , "SJA" , "VCH" , "VCD" , "VCA" , "WHH" , "WHD" , "WHA"]
     bookmakers_closing_list = ["B365CH" , "B365CD" , "B365CA" , "BWCH" , "BWCD" , "BWCA" , "IWCH" , "IWCD" , "IWCA" , "PSCH" , "PSCD" , "PSCA" , "VCCH" , "VCCD" , "VCCA" , "WHCH" , "WHCD" , "WHCA"]
     bookmakers_total_list = bookmakers_list + bookmakers_closing_list
-    matches_results_df = matches_results_df[matches_statistics + bookmakers_total_list]
+    matches_results_df_columns = matches_results_df.columns[matches_results_df.columns.isin(matches_statistics + bookmakers_total_list)]
+    matches_results_df_bookmakers_columns = matches_results_df.columns[matches_results_df.columns.isin(bookmakers_total_list)]
+    matches_results_df = matches_results_df[matches_results_df_columns]
     matches_results_df = matches_results_df.drop(matches_results_df[matches_results_df[matches_statistics].isna().any(axis = 1)].index)
-    matches_results_df = matches_results_df.drop(matches_results_df[matches_results_df[bookmakers_total_list].isna().all(axis = 1)].index)
+    matches_results_df = matches_results_df.drop(matches_results_df[matches_results_df[matches_results_df_bookmakers_columns].isna().all(axis = 1)].index)
 
     bookmakers_H = []
     bookmakers_D = []
@@ -47,7 +52,7 @@ def get_matches_results_df():
     rD = re.compile(r"\w+D$")
     rA = re.compile(r"\w+A$")
 
-    for col in bookmakers_total_list:
+    for col in matches_results_df_bookmakers_columns:
     
         if rH.findall(col) != []:
             bookmakers_H.append(rH.findall(col)[0])
@@ -65,7 +70,7 @@ def get_matches_results_df():
     matches_results_df["Max D"] = matches_results_df[bookmakers_D].max(axis = 1)
     matches_results_df["Max A"] = matches_results_df[bookmakers_A].max(axis = 1)
 
-    matches_results_df = matches_results_df.drop(columns = bookmakers_total_list)
+    matches_results_df = matches_results_df.drop(columns = matches_results_df_bookmakers_columns)
     matches_results_df["Date"] = pd.to_datetime(matches_results_df["Date"] , dayfirst = True)
     
     matches_results_df = matches_results_df.replace({
@@ -107,16 +112,15 @@ def get_matches_results_df():
 
     return matches_results_df
 
-def get_FIFA_ratings_df():
-    input_data_address = "input_data/FIFA_notes/"
-    seasons = ["2014-2015" , "2015-2016" , "2016-2017" , "2017-2018" , "2018-2019" , "2019-2020" , "2020-2021" , "2021-2022" , "2022-2023"]
+def get_FIFA_ratings_df(seasons : list , FIFA_files : list):
+    input_data_address = "input_data/FIFA_notes/"    
     FIFA_ratings_df = pd.DataFrame()
     selected_columns = ["short_name" , "club_name" , "league_name" , "team_position" , "player_positions" , "age" , "overall" , "potential" , "value_eur" , "pace" , "shooting" , "passing" , "dribbling" , "defending" , "physic"]
     i = 0
-    for file in sorted(listdir(input_data_address)):
+    for season , file in zip(seasons , FIFA_files):
         df = pd.read_csv(input_data_address + file , low_memory = False)
         df = df[selected_columns]
-        df.insert(0 , "Season" , seasons[i])
+        df.insert(0 , "Season" , season)
         FIFA_ratings_df = pd.concat([FIFA_ratings_df , df])
         i += 1
     
@@ -182,9 +186,9 @@ def get_FIFA_ratings_selected_players_df(matches_results_df : pd.DataFrame , FIF
     FIFA_ratings_selected_players_df.columns = FIFA_ratings_selected_players_df.columns.str.capitalize()
     
     dictionary = {
-    "League name" : "division" ,
-    "Club name" : "team" ,
-    "Value eur" : "value"
+    "League name" : "Division" ,
+    "Club name" : "Team" ,
+    "Value eur" : "Value"
     }
       
     FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df.rename(columns = dictionary)
@@ -206,7 +210,7 @@ def get_clubs_correlation_dictionary(matches_results_df : pd.DataFrame , FIFA_ra
             clubs_temp1 = list(matches_results_df[(matches_results_df["Division"] == division) & (matches_results_df["Season"] == season)]["home_team"].unique())
             clubs_temp2 = list(matches_results_df[(matches_results_df["Division"] == division) & (matches_results_df["Season"] == season)]["away_team"].unique())
             clubs1 = set(clubs_temp1 + clubs_temp2)
-            clubs2 = FIFA_ratings_selected_players_df[(FIFA_ratings_selected_players_df["division"] == division) & (FIFA_ratings_selected_players_df["Season"] == season)]["team"].unique()
+            clubs2 = FIFA_ratings_selected_players_df[(FIFA_ratings_selected_players_df["Division"] == division) & (FIFA_ratings_selected_players_df["Season"] == season)]["Team"].unique()
 
             print(season , division , len(clubs1) , len(clubs2))
 
@@ -266,23 +270,71 @@ def replace_clubs_names(matches_results_df : pd.DataFrame , clubs_correlation_di
     matches_results_df.to_csv(f"{output_data_folder}/matches_results.csv" , index = False)
     return matches_results_df
 
-@router.post("/initialize_databases" , name = "Initialize databases")
-async def initialize_tables(user = Depends(decode_token) , session = Depends(start_session) , engine = Depends(select_engine)):
+def get_matches_results_corrected_df_and_FIFA_ratings_selected_players_df(seasons : list , FIFA_files : list):
+    matches_results_df = get_matches_results_df(seasons = seasons)
+    FIFA_ratings_df = get_FIFA_ratings_df(seasons = seasons , FIFA_files = FIFA_files)
+    divisions_dictionary = get_divisions_dictionary(matches_results_df = matches_results_df , FIFA_ratings_df = FIFA_ratings_df)
+    FIFA_ratings_selected_players_df = get_FIFA_ratings_selected_players_df(matches_results_df = matches_results_df , FIFA_ratings_df = FIFA_ratings_df , divisions_dictionary = divisions_dictionary)
+    clubs_correlation_dictionary = get_clubs_correlation_dictionary(matches_results_df = matches_results_df , FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df)
+    matches_results_corrected_df = replace_clubs_names(matches_results_df = matches_results_df , clubs_correlation_dictionary = clubs_correlation_dictionary)
+
+    return matches_results_corrected_df , FIFA_ratings_selected_players_df
+
+def create_tables_matchesresults_and_fifa(session : Session):
+    engine = select_engine()
+    if (not inspect(engine).has_table("matches_results")) or (not inspect(engine).has_table("FIFA")):
+        reset_tables_matchesresults_and_fifa()
+        MatchesResultsBase.metadata.create_all(bind = engine)
+        FIFABase.metadata.create_all(bind = engine)
+        seasons = ["2014-2015" , "2015-2016" , "2016-2017" , "2017-2018" , "2018-2019" , "2019-2020" , "2020-2021" , "2021-2022" , "2022-2023"]
+        FIFA_files = ["FIFA15.csv" , "FIFA16.csv" , "FIFA17.csv" , "FIFA18.csv" , "FIFA19.csv" , "FIFA20.csv" , "FIFA21.csv" , "FIFA22.csv" , "FIFA23.csv"]
+        matches_results_corrected_df , FIFA_ratings_selected_players_df = get_matches_results_corrected_df_and_FIFA_ratings_selected_players_df(seasons = seasons , FIFA_files = FIFA_files)
+        matches_results_corrected_df.to_sql("matches_results" , if_exists = "append" , con = engine , index = False)
+        FIFA_ratings_selected_players_df.to_sql("FIFA" , if_exists = "append" , con = engine , index = False)
+
+def create_table_users(session : Session):
+    engine = select_engine()
+    if not inspect(engine).has_table("users") :
+        UsersBase.metadata.create_all(bind = engine)
+        add_to_users_table(Users(username = "Mathieu", password = "Crosnier", is_admin = 1 , registered_date = datetime.now(timezone.utc)) , session = session)
+
+def create_table_predictions(session : Session):
+    engine = select_engine()
+    if not inspect(engine).has_table("predictions") :
+        PredictionsBase.metadata.create_all(bind = engine)
+
+@router.post("/initialize_tables_matchesresults_and_fifa" , name = "Initialize tables MatchesResults and FIFA")
+async def initialize_tables_matchesresults_and_fifa(user = Depends(decode_token) , session = Depends(start_session) , engine = Depends(select_engine)):
     if user.get("rights") != "Administrator":
         raise HTTPException(
             status_code = status.HTTP_403_FORBIDDEN ,
             detail = "You must be an administrator to perform this action !" ,
             headers = {"WWW-Authenticate": "Bearer"})
-    reset_tables()
-    create_tables(session = session)
-    matches_results_df = get_matches_results_df()
-    FIFA_ratings_df = get_FIFA_ratings_df()
-    divisions_dictionary = get_divisions_dictionary(matches_results_df = matches_results_df , FIFA_ratings_df = FIFA_ratings_df)
-    FIFA_ratings_selected_players_df = get_FIFA_ratings_selected_players_df(matches_results_df = matches_results_df , FIFA_ratings_df = FIFA_ratings_df , divisions_dictionary = divisions_dictionary)
-    clubs_correlation_dictionary = get_clubs_correlation_dictionary(matches_results_df , FIFA_ratings_selected_players_df)
-    matches_results_corrected_df = replace_clubs_names(matches_results_df , clubs_correlation_dictionary)
+    reset_tables_matchesresults_and_fifa()
+    create_tables_matchesresults_and_fifa(session = session)
+    
+    return "Tables MatchesResults and FIFA have been succesfully initialized !"
 
-    matches_results_corrected_df.to_sql("matches_results" , con = engine , if_exists = "append" , index = False)
-    FIFA_ratings_selected_players_df.to_sql("FIFA" , con = engine , if_exists = "append" , index = False)
+@router.post("/initialize_table_users" , name = "Initialize table Users")
+async def initialize_table_users(user = Depends(decode_token) , session = Depends(start_session) , engine = Depends(select_engine)):
+    if user.get("rights") != "Administrator":
+        raise HTTPException(
+            status_code = status.HTTP_403_FORBIDDEN ,
+            detail = "You must be an administrator to perform this action !" ,
+            headers = {"WWW-Authenticate": "Bearer"})
+    reset_table_users()
+    create_table_users(session = session)
 
-    return "Databases have been succesfully initialized !"
+    return "Table Users has been succesfully initialized !"
+
+@router.post("/initialize_table_predictions" , name = "Initialize table Predictions")
+async def initialize_table_predictions(user = Depends(decode_token) , session = Depends(start_session) , engine = Depends(select_engine)):
+    if user.get("rights") != "Administrator":
+        raise HTTPException(
+            status_code = status.HTTP_403_FORBIDDEN ,
+            detail = "You must be an administrator to perform this action !" ,
+            headers = {"WWW-Authenticate": "Bearer"})
+    reset_table_predictions()
+    create_table_predictions(session = session)
+
+    return "Table Predictions has been succesfully initialized !"
