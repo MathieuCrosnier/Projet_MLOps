@@ -1,12 +1,9 @@
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
 from fastapi import APIRouter , Depends , HTTPException , status
-from pydantic import BaseModel
 from joblib import load
 from access import decode_token
 from sqlalchemy import text
-from sqlalchemy.orm import Session
 from databases import start_session , add_to_predictions_table , Predictions , select_engine , select_output_data_folder
 from datetime import datetime , timezone
 
