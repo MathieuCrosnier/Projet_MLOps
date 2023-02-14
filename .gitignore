@@ -1,0 +1,4 @@
+API/output_data/production/*.csv
+API/output_data/test
+API/__pycache__
+Tests/__pycache__
