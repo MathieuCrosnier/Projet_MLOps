@@ -23,7 +23,7 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - output_data:/home/API/output_data
+      - output_data:/home/API/output_data/production
 
 volumes:
   databases:

@@ -88,10 +88,12 @@ def select_output_data_folder():
     else:
         output_data_folder = parameters.get("database").get("production").get("standard").get("OUTPUT_FOLDER")
     
-    if output_data_folder not in os.listdir():
-        os.mkdir(output_data_folder)
+    if "output_data" not in os.listdir():
+        os.mkdir("output_data")
+    if output_data_folder not in os.listdir("output_data"):
+        os.mkdir("output_data/" + output_data_folder)
         
-    return output_data_folder
+    return "output_data/" + output_data_folder
 
 def check_databases(engine : Engine , database : str):
     conn = engine.connect()
