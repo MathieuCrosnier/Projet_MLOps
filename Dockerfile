@@ -1,6 +1,6 @@
 FROM debian:latest
 WORKDIR /home
-ADD requirements.txt .
+ADD Docker/requirements.txt .
 RUN apt-get update && apt-get install python3-pip -y && apt-get install curl -y && pip install -r requirements.txt
 RUN mkdir API
 WORKDIR /home/API

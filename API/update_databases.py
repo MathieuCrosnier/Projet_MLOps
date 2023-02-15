@@ -10,11 +10,12 @@ def update_matches_results_table(seasons : list , FIFA_files : list):
 
     datas = matches_results_corrected_df.to_dict(orient='records')
     conn = engine.connect()
+    trans = conn.begin()
     for data in datas:
         try:
-            query = text("INSERT INTO matches_results (season , division , date , home_team , away_team , full_time_home_goals , full_time_away_goals , home_shots , away_shots , home_shots_on_target , away_shots_on_target , home_corners , away_corners , home_fouls , away_fouls , home_yellows , away_yellows , home_reds , away_reds , max_H , max_D , max_A , full_time_result) VALUES (:Season , :Division , :Date , :home_team , :away_team , :full_time_home_goals , :full_time_away_goals , :home_shots , :away_shots , :home_shots_on_target , :away_shots_on_target , :home_corners , :away_corners , :home_fouls , :away_fouls , :home_yellows , :away_yellows , :home_reds , :away_reds , :max_H , :max_D , :max_A , :full_time_result)")
+            query = text("INSERT INTO matches_results (season , division , date , home_team , away_team , full_time_home_goals , full_time_away_goals , home_shots , away_shots , home_shots_on_target , away_shots_on_target , home_corners , away_corners , home_fouls , away_fouls , home_yellows , away_yellows , home_reds , away_reds , max_H , max_D , max_A , full_time_result) VALUES (:season , :division , :date , :home_team , :away_team , :full_time_home_goals , :full_time_away_goals , :home_shots , :away_shots , :home_shots_on_target , :away_shots_on_target , :home_corners , :away_corners , :home_fouls , :away_fouls , :home_yellows , :away_yellows , :home_reds , :away_reds , :max_H , :max_D , :max_A , :full_time_result)")
             conn.execute(query , data)
         except IntegrityError:
             pass
-    conn.commit()
+    trans.commit()
     conn.close()

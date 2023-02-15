@@ -265,8 +265,6 @@ def train_model(ml_df : pd.DataFrame):
     model.fit(X_train_scaled , y_train)
     dump(model , f"{output_data_folder}/model.pkl")
     dump(scaler , f"{output_data_folder}/scaler.pkl")
-    
-    return
 
 @router.post("/train_model" , name = "Train the Machine Learning model")
 async def get_trained_model(user = Depends(decode_token) , engine = Depends(select_engine)):
