@@ -1,5 +1,6 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from airflow.operators.bash import BashOperator
 from airflow.utils.dates import days_ago
 from airflow.providers.github.operators.github import GithubOperator
 import urllib.request
@@ -580,10 +581,10 @@ def train_model(seasons : list , FIFA_files : list):
     dump(model , f"{output_data_folder}/model.pkl")
     dump(scaler , f"{output_data_folder}/scaler.pkl")
 
-#task1 = PythonOperator(
-#    task_id = "download_matches_results_files" ,
-#    python_callable = download_matches_results_files ,
-#    dag = dag)
+task1 = PythonOperator(
+    task_id = "download_matches_results_files" ,
+    python_callable = download_matches_results_files ,
+    dag = dag)
 
 #task2 = PythonOperator(
 #    task_id = "train_model" ,
@@ -594,7 +595,31 @@ def train_model(seasons : list , FIFA_files : list):
 #    } ,
 #    dag = dag)
 
-task3 = GithubOperator(
+git_add_commit_push_commands = """
+cd /mnt/c/Users/matcr/Documents/GitHub/Projet_MLOps/API ;
+git add input_data ;
+git add output_data ;
+git commit -m "Mise à jour des données d'entrée et du modèle par Airflow" ;
+git push ;
+"""
+
+task3 = BashOperator(
+    task_id = "git_add_commit_push" ,
+    bash_command = git_add_commit_push_commands ,
+    dag = dag)
+
+#task3 = GithubOperator(
+#    task_id = "git_add_commit_push" ,
+#    github_conn_id = "GitHub" ,
+#    github_method = "create_git_commit" ,
+#    owner = "MathieuCrosnier" ,
+#    repo = "Projet_MLOps" ,
+#    branch = "Development" ,
+#    path = "/mnt/c/Users/matcr/Documents/GitHub/Projet_MLOps" ,
+#    message = "Mise à jour des données d'entrée et du modèle par Airflow" ,
+#    dag=dag)
+
+task4 = GithubOperator(
     task_id = "github_pull_request" ,
     github_conn_id = "GitHub" ,
     github_method = "get_repo" ,
@@ -602,4 +627,4 @@ task3 = GithubOperator(
     result_processor = lambda repo : repo.create_pull(title = "Pull request from Airflow" , body = "Update of matches results and training of the model" , head = "Development" , base = "main") ,
     dag = dag)
 
-#task1 >> task2 >> task3
+task1 >> task3 >> task4
