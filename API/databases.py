@@ -1,6 +1,6 @@
 from sqlalchemy.orm import sessionmaker , Session , declarative_base
-from sqlalchemy import select , create_engine , Column , String , Float , Integer , Boolean , DateTime , text , Engine , UniqueConstraint
-import os
+from sqlalchemy import select , create_engine , Column , String , Float , Integer , Boolean , DateTime , text , UniqueConstraint
+from os import mkdir , listdir , environ
 import yaml
 
 UsersBase = declarative_base()
@@ -81,21 +81,21 @@ with open("parameters.yml", "r") as stream:
     parameters = yaml.safe_load(stream)
 
 def select_output_data_folder():
-    if os.environ.get("TEST") == "1":
+    if environ.get("TEST") == "1":
         output_data_folder = parameters.get("database").get("test").get("OUTPUT_FOLDER")           
-    elif os.environ.get("DOCKER") == "1":
+    elif environ.get("DOCKER") == "1":
         output_data_folder = parameters.get("database").get("production").get("docker").get("OUTPUT_FOLDER")
     else:
         output_data_folder = parameters.get("database").get("production").get("standard").get("OUTPUT_FOLDER")
     
-    if "output_data" not in os.listdir():
-        os.mkdir("output_data")
-    if output_data_folder not in os.listdir("output_data"):
-        os.mkdir("output_data/" + output_data_folder)
+    if "output_data" not in listdir():
+        mkdir("output_data")
+    if output_data_folder not in listdir("output_data"):
+        mkdir("output_data/" + output_data_folder)
         
     return "output_data/" + output_data_folder
 
-def check_databases(engine : Engine , database : str):
+def check_databases(engine , database : str):
     conn = engine.connect()
     query = text("SHOW DATABASES")
     result = conn.execute(query)
@@ -106,12 +106,12 @@ def check_databases(engine : Engine , database : str):
         conn.close()
 
 def select_engine():
-    if os.environ.get("TEST") == "1":
+    if environ.get("TEST") == "1":
         config =  parameters.get("database").get("test")
         engine = create_engine(f'mysql+pymysql://{config.get("MYSQL_USER")}:{config.get("MYSQL_PASSWORD")}@{config.get("MYSQL_HOST")}')
         check_databases(engine = engine , database = config.get("MYSQL_DB"))
         engine = create_engine(f'mysql+pymysql://{config.get("MYSQL_USER")}:{config.get("MYSQL_PASSWORD")}@{config.get("MYSQL_HOST")}/{config.get("MYSQL_DB")}')   
-    elif os.environ.get("DOCKER") == "1":
+    elif environ.get("DOCKER") == "1":
         config =  parameters.get("database").get("production").get("docker")
         engine = create_engine(f'mysql+pymysql://{config.get("MYSQL_USER")}:{config.get("MYSQL_PASSWORD")}@{config.get("MYSQL_HOST")}')
         check_databases(engine = engine , database = config.get("MYSQL_DB"))

@@ -20,11 +20,7 @@ def get_matches_results_df(seasons : list):
         for file in listdir(input_data_address + "/" + folder):
             print(folder + "/" + file)
             df = pd.read_csv(input_data_address + folder + "/" + file , encoding = 'unicode_escape')
-    
-            if "Season" in list(df.columns):
-                df["Season"] = folder
-            else:
-                df.insert(0 , "Season" , folder)
+            df.insert(0 , "season" , folder)
     
             if "HFKC" in list(df.columns):
                 df = df.rename(columns = {"HFKC" : "HF" , "AFKC" : "AF"})
@@ -32,9 +28,8 @@ def get_matches_results_df(seasons : list):
             df["Div"] = file.strip(".csv").replace("_" , " ")
             matches_results_df = pd.concat([matches_results_df , df])
     
-    matches_results_df = matches_results_df.reset_index(drop = True)    
-    matches_results_df = matches_results_df.rename(columns = {"Div" : "Division" , "HomeTeam" : "Home team" , "AwayTeam" : "Away team"})
-    matches_statistics = ["Season" , "Division" , "Date" , "Home team" , "Away team" , "FTHG" , "FTAG" , "FTR" , "HS" , "AS" , "HST" , "AST" , "HC" , "AC" , "HF" , "AF" , "HY" , "AY" , "HR" , "AR"]
+    matches_results_df = matches_results_df.reset_index(drop = True)
+    matches_statistics = ["season" , "Div" , "Date" , "HomeTeam" , "AwayTeam" , "FTHG" , "FTAG" , "FTR" , "HS" , "AS" , "HST" , "AST" , "HC" , "AC" , "HF" , "AF" , "HY" , "AY" , "HR" , "AR"]
     bookmakers_list = ["B365H" , "B365D" , "B365A" , "BWH" , "BWD" , "BWA" , "IWH" , "IWD" , "IWA" , "LBH" , "LBD" , "LBA" , "PSH" , "PSD" , "PSA" , "SJH" , "SJD" , "SJA" , "VCH" , "VCD" , "VCA" , "WHH" , "WHD" , "WHA"]
     bookmakers_closing_list = ["B365CH" , "B365CD" , "B365CA" , "BWCH" , "BWCD" , "BWCA" , "IWCH" , "IWCD" , "IWCA" , "PSCH" , "PSCD" , "PSCA" , "VCCH" , "VCCD" , "VCCA" , "WHCH" , "WHCD" , "WHCA"]
     bookmakers_total_list = bookmakers_list + bookmakers_closing_list
@@ -86,8 +81,10 @@ def get_matches_results_df(seasons : list):
                                            })
     
     dictionary = {
-    "Home team" : "home_team" ,
-    "Away team" : "away_team" ,
+    "Div" : "division" ,
+    "Date" : "date" ,
+    "HomeTeam" : "home_team" ,
+    "AwayTeam" : "away_team" ,
     "FTHG" : "full_time_home_goals" ,
     "FTAG" : "full_time_away_goals" ,
     "HS" : "home_shots" ,
@@ -120,7 +117,7 @@ def get_FIFA_ratings_df(seasons : list , FIFA_files : list):
     for season , file in zip(seasons , FIFA_files):
         df = pd.read_csv(input_data_address + file , low_memory = False)
         df = df[selected_columns]
-        df.insert(0 , "Season" , season)
+        df.insert(0 , "season" , season)
         FIFA_ratings_df = pd.concat([FIFA_ratings_df , df])
         i += 1
     
@@ -130,7 +127,7 @@ def get_FIFA_ratings_df(seasons : list , FIFA_files : list):
 
 def get_divisions_dictionary(matches_results_df : pd.DataFrame , FIFA_ratings_df : pd.DataFrame):
     print("\nCorrespondance des noms des championnats :\n")
-    divisions1 = list(matches_results_df["Division"].unique())
+    divisions1 = list(matches_results_df["division"].unique())
     divisions2 = list(FIFA_ratings_df["league_name"].unique())
     divisions2.remove(np.nan)
 
@@ -170,25 +167,24 @@ def get_FIFA_ratings_selected_players_df(matches_results_df : pd.DataFrame , FIF
     FIFA_ratings_df["league_name"] = FIFA_ratings_df["league_name"].replace(divisions_dictionary)
     FIFA_ratings_selected_players_df = pd.DataFrame()
 
-    for season in matches_results_df["Season"].unique():
-        for division in matches_results_df[matches_results_df["Season"] == season]["Division"].unique():  
-            for club in FIFA_ratings_df.loc[(FIFA_ratings_df["Season"] == season) & (FIFA_ratings_df["league_name"] == division) , "club_name"].unique():
-                df = FIFA_ratings_df[(FIFA_ratings_df["club_name"] == club) & (FIFA_ratings_df["Season"] == season) & (FIFA_ratings_df["team_position"] != "RES")]
+    for season in matches_results_df["season"].unique():
+        for division in matches_results_df[matches_results_df["season"] == season]["division"].unique():  
+            for club in FIFA_ratings_df.loc[(FIFA_ratings_df["season"] == season) & (FIFA_ratings_df["league_name"] == division) , "club_name"].unique():
+                df = FIFA_ratings_df[(FIFA_ratings_df["club_name"] == club) & (FIFA_ratings_df["season"] == season) & (FIFA_ratings_df["team_position"] != "RES")]
                 index = df[(df["team_position"] == "SUB") & (df["player_positions"].str.contains("GK"))].sort_values(by = ["overall" , "potential"] , ascending = False).index[1 :]
                 df = df.drop(index = index)
                 FIFA_ratings_selected_players_df = pd.concat([FIFA_ratings_selected_players_df , df])
     
-    FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df.drop(FIFA_ratings_selected_players_df[(FIFA_ratings_selected_players_df["Season"] == "2019-2020") & (FIFA_ratings_selected_players_df["club_name"] == "Bury")].index)
+    FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df.drop(FIFA_ratings_selected_players_df[(FIFA_ratings_selected_players_df["season"] == "2019-2020") & (FIFA_ratings_selected_players_df["club_name"] == "Bury")].index)
     FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df.reset_index(drop = True)
     FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df.drop(columns = ["short_name" , "team_position" , "player_positions"])
-    FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df.groupby(["Season" , "league_name" , "club_name"]).agg(np.nanmean).reset_index()
+    FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df.groupby(["season" , "league_name" , "club_name"]).agg(np.nanmean).reset_index()
     FIFA_ratings_selected_players_df.columns = FIFA_ratings_selected_players_df.columns.str.replace("_" , " ")
-    FIFA_ratings_selected_players_df.columns = FIFA_ratings_selected_players_df.columns.str.capitalize()
     
     dictionary = {
-    "League name" : "Division" ,
-    "Club name" : "Team" ,
-    "Value eur" : "Value"
+    "league name" : "division" ,
+    "club name" : "team" ,
+    "value eur" : "value"
     }
       
     FIFA_ratings_selected_players_df = FIFA_ratings_selected_players_df.rename(columns = dictionary)
@@ -200,17 +196,17 @@ def get_FIFA_ratings_selected_players_df(matches_results_df : pd.DataFrame , FIF
 
 def get_clubs_correlation_dictionary(matches_results_df : pd.DataFrame , FIFA_ratings_selected_players_df : pd.DataFrame):
     print("\nNombre d'équipes dans les données de résultats de matchs VS nombre d'équipes dans les données FIFA :\n")
-    seasons = matches_results_df["Season"].unique()
+    seasons = matches_results_df["season"].unique()
     seasons_dictionary = {}
 
     for season in seasons:
         divisions_dictionary = {}
-        divisions = matches_results_df[matches_results_df["Season"] == season]["Division"].unique()
+        divisions = matches_results_df[matches_results_df["season"] == season]["division"].unique()
         for division in divisions:
-            clubs_temp1 = list(matches_results_df[(matches_results_df["Division"] == division) & (matches_results_df["Season"] == season)]["home_team"].unique())
-            clubs_temp2 = list(matches_results_df[(matches_results_df["Division"] == division) & (matches_results_df["Season"] == season)]["away_team"].unique())
+            clubs_temp1 = list(matches_results_df[(matches_results_df["division"] == division) & (matches_results_df["season"] == season)]["home_team"].unique())
+            clubs_temp2 = list(matches_results_df[(matches_results_df["division"] == division) & (matches_results_df["season"] == season)]["away_team"].unique())
             clubs1 = set(clubs_temp1 + clubs_temp2)
-            clubs2 = FIFA_ratings_selected_players_df[(FIFA_ratings_selected_players_df["Division"] == division) & (FIFA_ratings_selected_players_df["Season"] == season)]["Team"].unique()
+            clubs2 = FIFA_ratings_selected_players_df[(FIFA_ratings_selected_players_df["division"] == division) & (FIFA_ratings_selected_players_df["season"] == season)]["team"].unique()
 
             print(season , division , len(clubs1) , len(clubs2))
 
@@ -262,10 +258,10 @@ def get_clubs_correlation_dictionary(matches_results_df : pd.DataFrame , FIFA_ra
     return seasons_dictionary
 
 def replace_clubs_names(matches_results_df : pd.DataFrame , clubs_correlation_dictionary : dict):
-    for season in matches_results_df["Season"].unique():
-        for division in matches_results_df[matches_results_df["Season"] == season]["Division"].unique():
-            matches_results_df.loc[(matches_results_df["Season"] == season) & (matches_results_df["Division"] == division) , "home_team"] = matches_results_df[(matches_results_df["Season"] == season) & (matches_results_df["Division"] == division)]["home_team"].apply(lambda x: clubs_correlation_dictionary[season][division][x])
-            matches_results_df.loc[(matches_results_df["Season"] == season) & (matches_results_df["Division"] == division) , "away_team"] = matches_results_df[(matches_results_df["Season"] == season) & (matches_results_df["Division"] == division)]["away_team"].apply(lambda x: clubs_correlation_dictionary[season][division][x])
+    for season in matches_results_df["season"].unique():
+        for division in matches_results_df[matches_results_df["season"] == season]["division"].unique():
+            matches_results_df.loc[(matches_results_df["season"] == season) & (matches_results_df["division"] == division) , "home_team"] = matches_results_df[(matches_results_df["season"] == season) & (matches_results_df["division"] == division)]["home_team"].apply(lambda x: clubs_correlation_dictionary[season][division][x])
+            matches_results_df.loc[(matches_results_df["season"] == season) & (matches_results_df["division"] == division) , "away_team"] = matches_results_df[(matches_results_df["season"] == season) & (matches_results_df["division"] == division)]["away_team"].apply(lambda x: clubs_correlation_dictionary[season][division][x])
     output_data_folder = select_output_data_folder()
     matches_results_df.to_csv(f"{output_data_folder}/matches_results.csv" , index = False)
     return matches_results_df
@@ -286,8 +282,8 @@ def create_tables_matchesresults_and_fifa(session : Session):
         reset_tables_matchesresults_and_fifa()
         MatchesResultsBase.metadata.create_all(bind = engine)
         FIFABase.metadata.create_all(bind = engine)
-        seasons = ["2014-2015" , "2015-2016" , "2016-2017" , "2017-2018" , "2018-2019" , "2019-2020" , "2020-2021" , "2021-2022" , "2022-2023"]
-        FIFA_files = ["FIFA15.csv" , "FIFA16.csv" , "FIFA17.csv" , "FIFA18.csv" , "FIFA19.csv" , "FIFA20.csv" , "FIFA21.csv" , "FIFA22.csv" , "FIFA23.csv"]
+        seasons = sorted(listdir("input_data/matches_results"))
+        FIFA_files = sorted(listdir("input_data/FIFA_notes"))
         matches_results_corrected_df , FIFA_ratings_selected_players_df = get_matches_results_corrected_df_and_FIFA_ratings_selected_players_df(seasons = seasons , FIFA_files = FIFA_files)
         matches_results_corrected_df.to_sql("matches_results" , if_exists = "append" , con = engine , index = False)
         FIFA_ratings_selected_players_df.to_sql("FIFA" , if_exists = "append" , con = engine , index = False)
