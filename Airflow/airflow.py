@@ -16,7 +16,7 @@ from joblib import dump
 dag = DAG(
     dag_id = "matches_results_download" ,
     tags = ["SportsBetPy"] ,
-    #schedule_interval = timedelta(minutes = 5),
+    schedule_interval = timedelta(days = 1),
     catchup = False,
     default_args = {
         "owner" : "crocro57" ,
