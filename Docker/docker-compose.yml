@@ -13,7 +13,7 @@ services:
             interval: 30s
 
   api:
-    image: image_api:latest
+    image: crocro57/image_api:latest
     container_name: api_container
     environment:
       - DOCKER=1
