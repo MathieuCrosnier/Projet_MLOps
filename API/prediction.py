@@ -276,7 +276,7 @@ async def prediction(home_team : str , away_team : str , game_date : str , user 
     add_to_predictions_table(prediction = prediction , session = session)
     
     return {
-        f"Cote victoire {home_team}" : odds[2] ,
-         "Cote match nul" : odds[1] ,
-          f"Cote victoire {away_team}" : odds[0]
+        f"Winning odd for {home_team}" : odds[2] ,
+         "Draw odd" : odds[1] ,
+          f"Winning odd for {away_team}" : odds[0]
     }
