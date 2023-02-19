@@ -69,7 +69,7 @@ For every game, the following information is stored:
 -	away_team: name of the away team,
 -	full_time_home_goals: number of goals scored by the home team,
 -	full_time_away_goals: number of goals scored by the away team,
--	home_shots: number of shots made by the home team, 
+-	home_shots: number of shots made by the home team,
 -	away_shots: number of shots made by the away team,
 -	home_shots_on_target: number of shots on target made by the home team,
 -	away_shots_on_target: number of shots on target made by the away team,
