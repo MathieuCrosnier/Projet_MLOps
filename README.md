@@ -5,6 +5,8 @@
   - [DATABASES](#databases)
     - [Matches_results](#matches_results)
     - [FIFA](#fifa)
+    - [Users](#users)
+    - [Predictions](#predictions)
 
 ## Presentation
 This GitHub repository contains all the elements to deploy the [SportsBetPy](https://github.com/MathieuCrosnier/SportsBetPy) project developed in the framework of the DataScientest training.
@@ -36,6 +38,8 @@ Predictions are stored in a SQL table called [predictions](#predictions).
 - /initialize_tables_matchesresults_and_fifa
 
 This endpoint allows to reset both tables [matches_results](#matches_results) and [FIFA](#fifa).
+
+À compléter !!!!
 
 ### DATABASES
 Some important data, needed to use the API, is stored in SQL tables via MySQL.
@@ -106,3 +110,23 @@ This table contains the information about the teams for the seasons and division
 - physic: average physical note of the team (out of 100).
 
 Data is taken from the FIFA video games.
+
+#### Users
+
+This table contains the information about the registered users. All the users created with the /signup endpoint are stored in this table. A user with username "Mathieu" and password "Crosnier" and with administrator rights exists by default. The information stored in this table is the following:
+- username: the user's username,
+- password: the user's password,
+- is_admin: the user's rights (standard or administrator),
+- registered_date: the user's date of registration.
+
+#### Predictions
+
+This table contains the predictions made with the /prediction endpoint. The information stored in this table is the following:
+- username: the username of the user who made the prediction,
+- home_team: the home team name for the predicted game, 
+- away_team: the away team name for the predicted game,
+- game_date: the date of the predicted game,
+- home_odd_predicted: the odd for the home team win returned by the model,
+- draw_odd_predicted: the the odd for the draw returned by the model,
+- away_odd_predicted: the odd for the away team win returned by the model,
+- prediction_date: the date of the prediction.
