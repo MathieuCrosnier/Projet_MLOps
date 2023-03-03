@@ -11,10 +11,12 @@ import re
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import StratifiedKFold , cross_val_score
+from sklearn.metrics import make_scorer
 from joblib import dump 
 
 dag = DAG(
-    dag_id = "matches_results_download" ,
+    dag_id = "SportsBetPy" ,
     tags = ["SportsBetPy"] ,
     schedule_interval = timedelta(days = 1),
     catchup = False,
@@ -321,7 +323,10 @@ def get_matches_results_corrected_df_and_FIFA_ratings_selected_players_df(season
 
     return matches_results_corrected_df , FIFA_ratings_selected_players_df 
 
-def get_ml_df(seasons : list , FIFA_files : list):
+def get_ml_df():
+    seasons = sorted(listdir("/mnt/c/Users/matcr/Documents/GitHub/Projet_MLOps/API/input_data/matches_results/"))
+    FIFA_files = sorted(listdir("/mnt/c/Users/matcr/Documents/GitHub/Projet_MLOps/API/input_data/FIFA_notes/"))
+    
     matches_results_corrected_df , FIFA_ratings_selected_players_df = get_matches_results_corrected_df_and_FIFA_ratings_selected_players_df(seasons = seasons , FIFA_files = FIFA_files)
     
     FIFA_ratings_selected_players_home_df = FIFA_ratings_selected_players_df.add_prefix("home_")
@@ -559,7 +564,7 @@ def get_ml_df(seasons : list , FIFA_files : list):
 
     df.to_csv(f"{output_data_folder}/complete_dataset.csv" , index = False)
 
-    df = df.drop(columns = df_matches_results.columns.drop("full_time_result"))
+    df = df.drop(columns = df_matches_results.columns.drop(["max_H" , "max_D" , "max_A" , "full_time_result"]))
     df = df.reset_index(drop = True)
     print(f"\nLe dataframe comporte {df.shape[0]} matches.")
     print(f"\nLe dataframe comporte {df.isna().sum().sum()} valeurs manquantes.")
@@ -567,9 +572,55 @@ def get_ml_df(seasons : list , FIFA_files : list):
 
     return df
 
-def train_model(seasons : list , FIFA_files : list):
-    ml_df = get_ml_df(seasons = seasons , FIFA_files = FIFA_files)
-    X_train = ml_df.drop(columns = "full_time_result")
+def gains(y , y_probs):
+    ml_df = pd.read_csv("/mnt/c/Users/matcr/Documents/GitHub/Projet_MLOps/API/output_data/production/final_dataset.csv")
+    df_gain = ml_df.loc[y.index , ["max_H" , "max_D" , "max_A"]]
+    df_gain = df_gain.rename(columns = {"max_H" : "Cote réelle H" , "max_D" : "Cote réelle D" , "max_A" : "Cote réelle A"})
+    
+    df_gain[["Cote calculée A" , "Cote calculée D" , "Cote calculée H"]] = 1 / y_probs
+
+    df_gain["Ecart H"] = 100 * (df_gain["Cote réelle H"] - df_gain["Cote calculée H"]) / df_gain["Cote réelle H"]
+    df_gain["Ecart D"] = 100 * (df_gain["Cote réelle D"] - df_gain["Cote calculée D"]) / df_gain["Cote réelle D"]
+    df_gain["Ecart A"] = 100 * (df_gain["Cote réelle A"] - df_gain["Cote calculée A"]) / df_gain["Cote réelle A"]
+
+    df_gain["Résultat"] = y
+    
+    for index in df_gain.index:
+  
+      max = df_gain.loc[index , ["Ecart H" , "Ecart D" , "Ecart A"]].max()
+  
+      if df_gain.loc[index , ["Ecart H"]][0] == max:
+        df_gain.loc[index , "Pari"] = "H"
+        df_gain.loc[index , "Ecart"] = df_gain.loc[index , "Ecart H"]
+      elif df_gain.loc[index , ["Ecart D"]][0] == max:
+        df_gain.loc[index , "Pari"] = "D"
+        df_gain.loc[index , "Ecart"] = df_gain.loc[index , "Ecart D"]
+      elif df_gain.loc[index , ["Ecart A"]][0] == max:
+        df_gain.loc[index , "Pari"] = "A"
+        df_gain.loc[index , "Ecart"] = df_gain.loc[index , "Ecart A"]
+        
+    for index in df_gain.index:
+      if df_gain.loc[index , "Résultat"] == df_gain.loc[index , "Pari"]:
+        df_gain.loc[index , "Résultat pari"] = 1
+      else:
+        df_gain.loc[index , "Résultat pari"] = 0
+    
+    for index in df_gain.index:
+      if df_gain.loc[index , "Résultat"] == "H":
+        df_gain.loc[index , "Gain"] = df_gain.loc[index , "Cote réelle H"] * df_gain.loc[index , "Résultat pari"] - 1
+      elif df_gain.loc[index , "Résultat"] == "D":
+        df_gain.loc[index , "Gain"] = df_gain.loc[index , "Cote réelle D"] * df_gain.loc[index , "Résultat pari"] - 1
+      elif df_gain.loc[index , "Résultat"] == "A":
+        df_gain.loc[index , "Gain"] = df_gain.loc[index , "Cote réelle A"] * df_gain.loc[index , "Résultat pari"] - 1
+        
+    df_gain = df_gain[df_gain["Ecart"] >= 0]
+    roi = df_gain["Gain"].sum() / df_gain.shape[0]
+    
+    return roi
+
+def compute_roi_and_train_model(task_instance):
+    ml_df = pd.read_csv("/mnt/c/Users/matcr/Documents/GitHub/Projet_MLOps/API/output_data/production/final_dataset.csv")
+    X_train = ml_df.drop(columns = ["max_H" , "max_D" , "max_A" , "full_time_result"])
     y_train = ml_df["full_time_result"]
     scaler = StandardScaler().fit(X_train)
     X_train_scaled = pd.DataFrame(scaler.transform(X_train) , index = X_train.index , columns = X_train.columns)
@@ -577,9 +628,13 @@ def train_model(seasons : list , FIFA_files : list):
     X_train.to_csv(f"{output_data_folder}/X_train.csv")
     X_train_scaled.to_csv(f"{output_data_folder}/X_train_scaled.csv")
     model = KNeighborsClassifier(n_neighbors = 134)
+    gains_score = make_scorer(score_func = gains , needs_proba = True)
+    cv = StratifiedKFold(n_splits = 5)
+    results = cross_val_score(estimator = model , X = X_train_scaled , y = y_train , cv = cv , scoring = gains_score)
+    task_instance.xcom_push(key = "ROI" , value = results)
     model.fit(X_train_scaled , y_train)
     dump(model , f"{output_data_folder}/model.pkl")
-    dump(scaler , f"{output_data_folder}/scaler.pkl")
+    dump(scaler , f"{output_data_folder}/scaler.pkl")   
 
 task1 = PythonOperator(
     task_id = "download_matches_results_files" ,
@@ -587,12 +642,13 @@ task1 = PythonOperator(
     dag = dag)
 
 task2 = PythonOperator(
-    task_id = "train_model" ,
-    python_callable = train_model ,
-    op_kwargs= {
-        "seasons" : sorted(listdir("/mnt/c/Users/matcr/Documents/GitHub/Projet_MLOps/API/input_data/matches_results/")) ,
-        "FIFA_files" : sorted(listdir("/mnt/c/Users/matcr/Documents/GitHub/Projet_MLOps/API/input_data/FIFA_notes/"))
-    } ,
+    task_id = "get_ml_df" ,
+    python_callable = get_ml_df ,
+    dag = dag)
+
+task3 = PythonOperator(
+    task_id = "compute_roi_and_train_model" ,
+    python_callable = compute_roi_and_train_model ,
     dag = dag)
 
 git_add_commit_push_commands = """
@@ -603,17 +659,18 @@ git commit -m "Update of matches results and training of the model by Airflow" ;
 git push ;
 """
 
-task3 = BashOperator(
-    task_id = "git_add_commit_push" ,
-    bash_command = git_add_commit_push_commands ,
-    dag = dag)
+#task4 = BashOperator(
+#    task_id = "git_add_commit_push" ,
+#    bash_command = git_add_commit_push_commands ,
+#    dag = dag)
 
-task4 = GithubOperator(
-    task_id = "github_pull_request" ,
-    github_conn_id = "GitHub" ,
-    github_method = "get_repo" ,
-    github_method_args = {"full_name_or_id" : "MathieuCrosnier/Projet_MLOps"} ,
-    result_processor = lambda repo : repo.create_pull(title = "Pull request from Airflow" , body = "Update of matches results and training of the model" , head = "Development" , base = "main") ,
-    dag = dag)
+#task5 = GithubOperator(
+#    task_id = "github_pull_request" ,
+#    github_conn_id = "GitHub" ,
+#    github_method = "get_repo" ,
+#    github_method_args = {"full_name_or_id" : "MathieuCrosnier/Projet_MLOps"} ,
+#    result_processor = lambda repo : repo.create_pull(title = "Pull request from Airflow" , body = "Update of matches results and training of the model" , head = "Development" , base = "main") ,
+#    dag = dag)
 
-task1 >> task2 >> task3 >> task4
+task1 >> task2 >> task3
+# >> task4 >> task5
