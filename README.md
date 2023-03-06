@@ -10,15 +10,16 @@
   - [Airflow](#airflow)
   - [Tests](#tests)
   - [Docker](#docker)
+- [Getting started](#getting-started)
 
 ## Presentation
 This GitHub repository contains all the elements to deploy the [SportsBetPy](https://github.com/MathieuCrosnier/SportsBetPy) project developed in the framework of the DataScientest training.
-SportsBetPy is an application that allows a bettor to compute the odds of a football game, with an objective to help him identify the profitable bets by comparing the computed odds with the bookmakers odds.
+SportsBetPy is an application that allows a bettor to compute the odds of a football game, with an objective to help him identify the profitable bets by comparing the computed odds with the bookmakers odds. For more information about the aim of the project, please refer to the following [report](https://github.com/MathieuCrosnier/SportsBetPy/blob/main/SportsBetPy.pdf).
 
 ## Main features
 ### REST API
 The main feature is an API developed with FastAPI.
-The API allows to perform 8 different requests :
+The API allows to perform 7 different requests :
 
 - /signup
 
@@ -163,12 +164,13 @@ The airflow file can be found in the folder [Airflow](https://github.com/Mathieu
 
 ### Tests
 
-On Pull Requests, a GitHub workflow starts and executes a batch of tests on the API using pytest.
+On Pull Requests, a [GitHub workflow](https://github.com/MathieuCrosnier/Projet_MLOps/tree/main/.github/workflows/tests_workflow.yml) starts and executes a batch of tests on the API using pytest.
 If the tests pass, the Pull Request can be validated and the main branch is updated.
-The workflow is stored in the folder [.github/workflows](https://github.com/MathieuCrosnier/Projet_MLOps/tree/main/.github/workflows).
 
 ### Docker
 
-When a push is made on the main branch, a GitHub workflow starts and executes some commands to build the API image.
-The Dockerfile used to build the image is stored in the root folder.
+When a push is made on the main branch, a [GitHub workflow](https://github.com/MathieuCrosnier/Projet_MLOps/tree/main/.github/workflows/docker_workflow.yml) starts and executes some commands to build the API image.
+The [Dockerfile](https://github.com/MathieuCrosnier/Projet_MLOps/tree/main/Dockerfile) used to build the image is stored in the root folder.
 The image is then pushed to [Docker Hub](https://hub.docker.com/r/crocro57/image_api).
+
+## Getting started
