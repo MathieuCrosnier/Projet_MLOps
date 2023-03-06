@@ -7,6 +7,9 @@
     - [FIFA](#fifa)
     - [Users](#users)
     - [Predictions](#predictions)
+  - [Airflow](#airflow)
+  - [Tests](#tests)
+  - [Docker](#docker)
 
 ## Presentation
 This GitHub repository contains all the elements to deploy the [SportsBetPy](https://github.com/MathieuCrosnier/SportsBetPy) project developed in the framework of the DataScientest training.
@@ -159,4 +162,8 @@ The airflow file can be found in the folder [Airflow](https://github.com/Mathieu
 
 ### Tests
 
-Tests 
+On Pull Requests, a GitHub workflow starts and executes a batch of tests on the API using pytest.
+If the tests pass, the Pull Request can be validated.
+The workflow is stored in the folder [.github/workflows](https://github.com/MathieuCrosnier/Projet_MLOps/tree/main/.github/workflows).
+
+### Docker
