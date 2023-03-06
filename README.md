@@ -2,7 +2,7 @@
 - [Presentation](#presentation)
 - [Main features](#main-features)
   - [REST API](#rest-api)
-  - [DATABASES](#databases)
+  - [Databases](#databases)
     - [Matches_results](#matches_results)
     - [FIFA](#fifa)
     - [Users](#users)
@@ -20,11 +20,12 @@ The API allows to perform 8 different requests :
 - /signup
 
 This endpoint allows to create an account by typing a username and a password. The new user is created with standard rights. Users are stored in a SQL table called [users](#users).
+
 Nota: A user with username "Mathieu" and password "Crosnier" and with administrator rights exists by default.
 
 - /token
 
-When you log in to the API, this endpoint generates a JWT token. It allows to safely  identify who got connected and to keep this information until the token expires.
+When you log in to the API, this endpoint generates a JWT token. It allows to safely identify who got connected and to keep this information until the token expires.
 
 - /user
 
@@ -38,11 +39,22 @@ Predictions are stored in a SQL table called [predictions](#predictions).
 - /initialize_tables_matchesresults_and_fifa
 
 This endpoint allows to reset both tables [matches_results](#matches_results) and [FIFA](#fifa).
+It requires administrator rights.
 
-À compléter !!!!
+- /initialize_table_users
 
-### DATABASES
-Some important data, needed to use the API, is stored in SQL tables via MySQL.
+This endpoint allows to reset the table [users](#users).
+It requires administrator rights.
+
+- /initialize_table_predictions
+
+This endpoint allows to reset the table [predictions](#predictions).
+It requires administrator rights.
+
+All the files related to the API are stored in the folder [API](https://github.com/MathieuCrosnier/Projet_MLOps/tree/main/API).
+
+### Databases
+Some important data needed to use the API is stored in SQL tables via MySQL.
 
 4 tables are used:
 #### Matches_results
@@ -90,8 +102,9 @@ For every game, the following information is stored:
 -	max_A: maximum bookmaker odd for away team win,
 -	full_time_result: the final result of the match.
 
-Data is taken from https://www.football-data.co.uk/data.php website.
+Data is taken from https://www.football-data.co.uk/data.php website and stored through csv files in the folder [API/input_data/matches_results](https://github.com/MathieuCrosnier/Projet_MLOps/tree/main/API/input_data/matches_results). 
 
+When starting up the API, this table is updated with the potential new matches results.
 #### FIFA
 
 This table contains the information about the teams for the seasons and divisions available:
@@ -109,7 +122,7 @@ This table contains the information about the teams for the seasons and division
 - defending: average defending note of the team (out of 100),
 - physic: average physical note of the team (out of 100).
 
-Data is taken from the FIFA video games.
+Data is taken from the FIFA video games and stored through csv files in the folder [API/input_data/FIFA_notes](https://github.com/MathieuCrosnier/Projet_MLOps/tree/main/API/input_data/FIFA_notes).
 
 #### Users
 
@@ -130,3 +143,20 @@ This table contains the predictions made with the /prediction endpoint. The info
 - draw_odd_predicted: the the odd for the draw returned by the model,
 - away_odd_predicted: the odd for the away team win returned by the model,
 - prediction_date: the date of the prediction.
+
+### Airflow
+
+Airflow is used to automatize some recurrent tasks needed to keep the project updated.
+The tasks Airflow performs are the following:
+- Downloading the latest matches results for all the divisions,
+- Treat the data to obtain the Machine Learning dataset,
+- Compute the metric. The metric considered is the ROI (Return Over Investment) as if we were betting money following the Machine Learning model. For more information about this metric, please refer to the following [report](https://github.com/MathieuCrosnier/SportsBetPy/blob/main/SportsBetPy.pdf). The metric is stored as an XCom in Airflow.
+- Train the Machine Learning model. The model is then stored in the folder [API/output_data/production](https://github.com/MathieuCrosnier/Projet_MLOps/tree/main/API/output_data/production),
+- Add, commit and push to GitHub,
+- Perform a Pull Request on the main branch.
+
+The airflow file can be found in the folder [Airflow](https://github.com/MathieuCrosnier/Projet_MLOps/tree/main/Airflow).
+
+### Tests
+
+Tests 
