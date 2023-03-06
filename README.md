@@ -38,6 +38,7 @@ This endpoint displays, for the logged in user, it's username and rights.
 
 This endpoint allows to make a prediction using the Machine Learning model. The user must type in the 2 teams playing the game and the game date (with yyyy-mm-dd format). The result is the computed odds. It allows to compare to the bookmakers odds and decide whether or not a bet is profitable. For more information on the theory behind odds, please refer to the following [report](https://github.com/MathieuCrosnier/SportsBetPy/blob/main/SportsBetPy.pdf).
 Predictions are stored in a SQL table called [predictions](#predictions).
+The list of teams with the correct syntax from current season for the different divisions can be found in the following [file](https://github.com/MathieuCrosnier/Projet_MLOps/tree/main/Current_season_teams.xlsx).
 
 - /initialize_tables_matchesresults_and_fifa
 
