@@ -35,4 +35,4 @@ async def startup():
 
 @api.get("/" , name = "Welcome message" , tags = ["Home page"])
 async def welcome_message():
-    return "Bienvenue sur l'API de SportsBetPy"
+    return "Welcome to SportsBetPy API !"
