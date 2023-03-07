@@ -174,3 +174,13 @@ The [Dockerfile](https://github.com/MathieuCrosnier/Projet_MLOps/tree/main/Docke
 The image is then pushed to [Docker Hub](https://hub.docker.com/r/crocro57/image_api).
 
 ## Getting started
+
+Follow the next steps to run the API: 
+
+- Install [Docker Desktop](https://docs.docker.com/desktop/) on your computer. If Docker Desktop is already installed, go to next step,
+- Download the contents of the [Docker folder](https://github.com/MathieuCrosnier/Projet_MLOps/tree/main/Docker),
+- Open a command line interface,
+- Go to the location where the contents of the folder was saved,
+- Type the command *docker compose up*. This command run 2 Docker containers, one for the API and one for the MySQL databases.
+- On your web browser, enter http://localhost:8000/. You should see a message in your browser saying *Welcome to SportsBetPy API !*. It allows to check that the API is correctly running,
+- On your web browser, enter http://localhost:8000/docs, you should reach the API interface. You are now free to try the API.
