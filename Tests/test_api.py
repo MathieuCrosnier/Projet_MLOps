@@ -25,7 +25,7 @@ session.close()
 def test_home():
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json() == "Bienvenue sur l'API de SportsBetPy"
+    assert response.json() == "Welcome to SportsBetPy API !"
 
 @pytest.mark.parametrize("params,status_code,json" , [({"username" : "Elsy" , "password" : "Barbin"} , 200 , "Your account has been created !"),
                                                       ({"username" : "Elsy" , "password" : "Crosnier"} , 401 , {'detail': "The username already exists !"}),
