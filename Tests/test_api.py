@@ -27,9 +27,11 @@ def test_home():
     assert response.status_code == 200
     assert response.json() == "Welcome to SportsBetPy API !"
 
-@pytest.mark.parametrize("params,status_code,json" , [({"username" : "Elsy" , "password" : "Barbin"} , 200 , "Your account has been created !"),
-                                                      ({"username" : "Elsy" , "password" : "Crosnier"} , 401 , {'detail': "The username already exists !"}),
-                                                      ({"username" : "" , "password" : ""} , 401 , {'detail': "Username or password can't be empty !"})])
+@pytest.mark.parametrize("params,status_code,json" , [({"Username" : "Elsy" , "Password" : "Barbin"} , 200 , "Your account has been created !"),
+                                                      ({"Username" : "Elsy" , "Password" : "Crosnier"} , 400 , {'detail': "The username already exists !"}),
+                                                      ({"Username" : "" , "Password" : ""} , 400 , {'detail': "The username or password can't be empty !"}),
+                                                      ({"Username" : "Test" , "Password" : ""} , 400 , {'detail': "The username or password can't be empty !"}),
+                                                      ({"Username" : "" , "Password" : "Test"} , 400 , {'detail': "The username or password can't be empty !"})])
 def test_signup1(params , status_code , json):
     response = client.post("/signup" , params = params)
     assert response.status_code == status_code
@@ -45,7 +47,7 @@ def test_token(user , status_code , json):
     assert response.status_code == status_code
     assert response.json().get("detail") == json
 
-def test_user():
+def test_user1():
     response = client.get("/user")
     assert response.status_code == 401
     assert response.json() == {"detail" : "Not authenticated"}
@@ -91,7 +93,7 @@ def test_initialize_table_users(user , status_code , json):
     assert response.json() == json
 
 def test_signup2():
-    response = client.post("/signup" , params = {"username" : "Elsy" , "password" : "Barbin"})
+    response = client.post("/signup" , params = {"Username" : "Elsy" , "Password" : "Barbin"})
     assert response.status_code == 200
     assert response.json() == "Your account has been created !"
 
@@ -105,12 +107,12 @@ def test_train_model(user , status_code , json):
     assert response.status_code == status_code
     assert response.json() == json
 
-@pytest.mark.parametrize("params,user,status_code,json" , [({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "Grenoble Foot 38" , "game_date" : "2023-02-04"} , {"username" : "Micheline" , "password" : "Crobin"} , 401 , "Your session has expired !"),
-                                                           ({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "Grenoble Foot 38" , "game_date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "CROSNIER"} , 401 , "Your session has expired !"),
-                                                           ({"home_team" : "" , "away_team" : "Grenoble Foot 38" , "game_date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "Crosnier"} , 401 , "One of the teams you selected doesn't exist !"),
-                                                           ({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "" , "game_date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "Crosnier"} , 401 , "One of the teams you selected doesn't exist !"),
-                                                           ({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "Grenoble Foot 38" , "game_date" : "2023-02-04"} , {"username" : "Elsy" , "password" : "Barbin"} , 200 , None),
-                                                           ({"home_team" : "FC Girondins de Bordeaux" , "away_team" : "Grenoble Foot 38" , "game_date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "Crosnier"} , 200 , None)])
+@pytest.mark.parametrize("params,user,status_code,json" , [({"Home team" : "FC Girondins de Bordeaux" , "Away team" : "Grenoble Foot 38" , "Match date" : "2023-02-04"} , {"username" : "Micheline" , "password" : "Crobin"} , 401 , "Your session has expired !"),
+                                                           ({"Home team" : "FC Girondins de Bordeaux" , "Away team" : "Grenoble Foot 38" , "Match date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "CROSNIER"} , 401 , "Your session has expired !"),
+                                                           ({"Home team" : "" , "Away team" : "Grenoble Foot 38" , "Match date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "Crosnier"} , 400 , "One of the teams you selected doesn't exist !"),
+                                                           ({"Home team" : "FC Girondins de Bordeaux" , "Away team" : "" , "Match date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "Crosnier"} , 400 , "One of the teams you selected doesn't exist !"),
+                                                           ({"Home team" : "FC Girondins de Bordeaux" , "Away team" : "Grenoble Foot 38" , "Match date" : "2023-02-04"} , {"username" : "Elsy" , "password" : "Barbin"} , 200 , None),
+                                                           ({"Home team" : "FC Girondins de Bordeaux" , "Away team" : "Grenoble Foot 38" , "Match date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "Crosnier"} , 200 , None)])
 def test_prediction(params , user , status_code , json):
     token = client.post("/token" , data = user).json().get("access_token")
     response = client.post("prediction" , params = params , headers = {"Authorization": f"Bearer {token}"})
