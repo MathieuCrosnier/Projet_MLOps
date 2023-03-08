@@ -266,8 +266,16 @@ def train_model(ml_df : pd.DataFrame):
     dump(model , f"{output_data_folder}/model.pkl")
     dump(scaler , f"{output_data_folder}/scaler.pkl")
 
-@router.post("/train_model" , name = "Train the Machine Learning model")
+train_model_responses = {401 : {"description" : "You must sign in first !"} ,
+                        403 : {"description" : "You must be an administrator to perform this action !"}}
+
+@router.post("/train_model" , name = "Train the Machine Learning model" , responses = train_model_responses)
 async def get_trained_model(user = Depends(decode_token) , engine = Depends(select_engine)):
+    """
+    Trains Machine Learning model.
+    
+    Administrator rights required.
+    """
     if user.get("rights") != "Administrator":
         raise HTTPException(
             status_code = status.HTTP_403_FORBIDDEN ,

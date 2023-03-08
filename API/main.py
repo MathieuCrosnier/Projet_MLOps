@@ -8,7 +8,27 @@ from init_databases import create_tables_matchesresults_and_fifa , create_table_
 from update_databases import update_matches_results_table
 from sqlalchemy.orm import sessionmaker
 
-api = FastAPI(title = "API SportsBetPy")
+api_description = """
+Welcome to the SportsBetPy API !
+
+Our Machine Learning model computes odds for football matches.
+
+The aim  is to help any bettor to identify value bets by comparing our odds with the bookmakers odds.
+
+Enjoy !
+"""
+
+api = FastAPI(title = "API SportsBetPy" , description = api_description)
+
+@api.get("/" , name = "Welcome message" , tags = ["Home page"])
+async def welcome_message():
+    """
+    Generates a welcome message.
+
+    If you get it, the API is running correctly.
+    """
+    return "Welcome to SportsBetPy API !"
+
 api.include_router(access.router)
 api.include_router(prediction.router)
 api.include_router(init_databases.router)
@@ -32,7 +52,3 @@ async def update_matches_results_database_on_startup():
 async def startup():
     await create_tables_on_startup()
     await update_matches_results_database_on_startup()
-
-@api.get("/" , name = "Welcome message" , tags = ["Home page"])
-async def welcome_message():
-    return "Welcome to SportsBetPy API !"

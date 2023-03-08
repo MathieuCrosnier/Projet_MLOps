@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from fastapi import APIRouter , Depends , HTTPException , status
+from fastapi import APIRouter , Depends , HTTPException , status , Query
 from joblib import load
 from access import decode_token
 from sqlalchemy import text
@@ -18,7 +18,7 @@ def get_team_info(team : str , home_or_away : str , season : str = "2022-2023"):
 
     if (team_stats_df.empty) or (team_results_df.empty):
         raise HTTPException(
-            status_code = status.HTTP_401_UNAUTHORIZED ,
+            status_code = status.HTTP_400_BAD_REQUEST ,
             detail = "One of the teams you selected doesn't exist !"
         )
 
@@ -252,22 +252,31 @@ def get_prediction_input(home_team : str , away_team : str):
         scaler = load(f"{output_data_folder}/scaler.pkl")
     except FileNotFoundError:
         raise HTTPException(
-            status_code = status.HTTP_403_FORBIDDEN ,
-            detail = "Your model is not trained !"
+            status_code = status.HTTP_503_SERVICE_UNAVAILABLE ,
+            detail = "The model is not available !"
         )
     df_scaled = pd.DataFrame(scaler.transform(df) , index = df.index , columns = df.columns)
     return df_scaled
 
-@router.post("/prediction" , name = "Get model prediction")
-async def prediction(home_team : str , away_team : str , game_date : str , user = Depends(decode_token) , session = Depends(start_session)):
+prediction_responses = {400 : {"description" : "One of the teams you selected doesn't exist !"} ,
+                        401 : {"description" : "You must sign in first !"} ,
+                        503 : {"description" : "The model is not available !"}}
+
+
+
+@router.post("/prediction" , name = "Get model prediction" , responses = prediction_responses)
+async def prediction(home_team : str = Query(alias = "Home team") , away_team : str  = Query(alias = "Away team"), game_date : str  = Query(alias = "Match date" , description = "Format : YYYY-MM-DD"), user = Depends(decode_token) , session = Depends(start_session)):
+    """
+    Returns the odds computed by the Machine Learning model which you can compare to the bookmakers odds before making your bet.
+    """    
     game = get_prediction_input(home_team = home_team , away_team = away_team)
     output_data_folder = select_output_data_folder()
     try:
         model = load(f"{output_data_folder}/model.pkl")
     except FileNotFoundError:
         raise HTTPException(
-            status_code = status.HTTP_403_FORBIDDEN ,
-            detail = "Your model is not trained !"
+            status_code = status.HTTP_503_SERVICE_UNAVAILABLE ,
+            detail = "The model is not available !"
         )
     probs = model.predict_proba(game)[0]
     odds = np.round(1 / probs , 2)
