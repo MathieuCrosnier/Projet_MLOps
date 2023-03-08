@@ -299,8 +299,16 @@ def create_table_predictions(session : Session):
     if not inspect(engine).has_table("predictions") :
         PredictionsBase.metadata.create_all(bind = engine)
 
-@router.post("/initialize_tables_matchesresults_and_fifa" , name = "Initialize tables MatchesResults and FIFA")
+databases_responses = {401 : {"description" : "You must sign in first !"} ,
+                        403 : {"description" : "You must be an administrator to perform this action !"}}
+
+@router.post("/initialize_tables_matchesresults_and_fifa" , name = "Initialize tables MatchesResults and FIFA" , responses = databases_responses)
 async def initialize_tables_matchesresults_and_fifa(user = Depends(decode_token) , session = Depends(start_session) , engine = Depends(select_engine)):
+    """
+    Initializes tables *matches_results* and *FIFA*.
+    
+    Administrator rights required.
+    """
     if user.get("rights") != "Administrator":
         raise HTTPException(
             status_code = status.HTTP_403_FORBIDDEN ,
@@ -311,8 +319,13 @@ async def initialize_tables_matchesresults_and_fifa(user = Depends(decode_token)
     
     return "Tables MatchesResults and FIFA have been succesfully initialized !"
 
-@router.post("/initialize_table_users" , name = "Initialize table Users")
+@router.post("/initialize_table_users" , name = "Initialize table Users" , responses = databases_responses)
 async def initialize_table_users(user = Depends(decode_token) , session = Depends(start_session) , engine = Depends(select_engine)):
+    """
+    Initializes table *users*.
+    
+    Administrator rights required.
+    """
     if user.get("rights") != "Administrator":
         raise HTTPException(
             status_code = status.HTTP_403_FORBIDDEN ,
@@ -323,8 +336,13 @@ async def initialize_table_users(user = Depends(decode_token) , session = Depend
 
     return "Table Users has been succesfully initialized !"
 
-@router.post("/initialize_table_predictions" , name = "Initialize table Predictions")
+@router.post("/initialize_table_predictions" , name = "Initialize table Predictions" , responses = databases_responses)
 async def initialize_table_predictions(user = Depends(decode_token) , session = Depends(start_session) , engine = Depends(select_engine)):
+    """
+    Initializes table *predictions*.
+    
+    Administrator rights required.
+    """
     if user.get("rights") != "Administrator":
         raise HTTPException(
             status_code = status.HTTP_403_FORBIDDEN ,
