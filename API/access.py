@@ -1,4 +1,4 @@
-from fastapi import APIRouter , Depends , HTTPException , status , Query
+from fastapi import APIRouter , Depends , HTTPException , status , Query , Form
 from fastapi.security import OAuth2PasswordBearer , OAuth2PasswordRequestForm
 from jwt import encode , decode , PyJWTError
 from datetime import datetime , timezone , timedelta
@@ -53,7 +53,7 @@ async def token(credentials : OAuth2PasswordRequestForm = Depends() , session = 
     return {"access_token": token, "token_type": "bearer"}
 
 @router.post("/signup" , name = "Create an account" , responses = {400 : {"description" : "The username already exists !"}})
-async def signup(username : str = Query(alias = "Username") , password : str = Query(alias = "Password") , session : Session = Depends(start_session)):
+async def signup(username : str = Form(alias = "Username") , password : str = Form(alias = "Password") , session : Session = Depends(start_session)):
     """
     Creates an account.  
     Your account will be created with standard rights.
