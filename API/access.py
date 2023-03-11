@@ -57,13 +57,7 @@ async def signup(username : str = Form(alias = "Username") , password : str = Fo
     """
     Creates an account.  
     Your account will be created with standard rights.
-    """
-    if (username == "") | (password == ""):
-        raise HTTPException(
-            status_code = status.HTTP_400_BAD_REQUEST ,
-            detail = "The username or password can't be empty !"
-        )
-    
+    """  
     user = current_user(username = username , session = session)
     if user is not None:
         raise HTTPException(
