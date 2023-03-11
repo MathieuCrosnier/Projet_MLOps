@@ -99,15 +99,15 @@ def test_signup2():
     assert response.status_code == 200
     assert response.json() == "Your account has been created !"
 
-#@pytest.mark.parametrize("user,status_code,json" , [({"username" : "Micheline" , "password" : "Crobin"} , 401 , {'detail' : 'Your session has expired !'}),
-#                                                    ({"username" : "Mathieu" , "password" : "CROSNIER"} , 401 , {'detail' : 'Your session has expired !'}),
-#                                                    ({"username" : "Elsy" , "password" : "Barbin"} , 403 , {'detail' : 'You must be an administrator to perform this action !'}),
-#                                                    ({"username" : "Mathieu" , "password" : "Crosnier"} , 200 , 'The model has been trained !')])
-#def test_train_model(user , status_code , json):
-#    token = client.post("/token" , data = user).json().get("access_token")
-#    response = client.post("/train_model" , headers = {"Authorization" : f"Bearer {token}"})
-#    assert response.status_code == status_code
-#    assert response.json() == json
+@pytest.mark.parametrize("user,status_code,json" , [({"username" : "Micheline" , "password" : "Crobin"} , 401 , {'detail' : 'Your session has expired !'}),
+                                                    ({"username" : "Mathieu" , "password" : "CROSNIER"} , 401 , {'detail' : 'Your session has expired !'}),
+                                                    ({"username" : "Elsy" , "password" : "Barbin"} , 403 , {'detail' : 'You must be an administrator to perform this action !'}),
+                                                    ({"username" : "Mathieu" , "password" : "Crosnier"} , 200 , 'The model has been trained !')])
+def test_train_model(user , status_code , json):
+    token = client.post("/token" , data = user).json().get("access_token")
+    response = client.post("/train_model" , headers = {"Authorization" : f"Bearer {token}"})
+    assert response.status_code == status_code
+    assert response.json() == json
 
 @pytest.mark.parametrize("params,user,status_code,json" , [({"Home team" : "FC Girondins de Bordeaux" , "Away team" : "Grenoble Foot 38" , "Match date" : "2023-02-04"} , {"username" : "Micheline" , "password" : "Crobin"} , 401 , "Your session has expired !"),
                                                            ({"Home team" : "FC Girondins de Bordeaux" , "Away team" : "Grenoble Foot 38" , "Match date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "CROSNIER"} , 401 , "Your session has expired !"),

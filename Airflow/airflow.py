@@ -659,18 +659,17 @@ git commit -m "Update of matches results and training of the model by Airflow" ;
 git push ;
 """
 
-#task4 = BashOperator(
-#    task_id = "git_add_commit_push" ,
-#    bash_command = git_add_commit_push_commands ,
-#    dag = dag)
+task4 = BashOperator(
+    task_id = "git_add_commit_push" ,
+    bash_command = git_add_commit_push_commands ,
+    dag = dag)
 
-#task5 = GithubOperator(
-#    task_id = "github_pull_request" ,
-#    github_conn_id = "GitHub" ,
-#    github_method = "get_repo" ,
-#    github_method_args = {"full_name_or_id" : "MathieuCrosnier/Projet_MLOps"} ,
-#    result_processor = lambda repo : repo.create_pull(title = "Pull request from Airflow" , body = "Update of matches results and training of the model" , head = "Development" , base = "main") ,
-#    dag = dag)
+task5 = GithubOperator(
+    task_id = "github_pull_request" ,
+    github_conn_id = "GitHub" ,
+    github_method = "get_repo" ,
+    github_method_args = {"full_name_or_id" : "MathieuCrosnier/Projet_MLOps"} ,
+    result_processor = lambda repo : repo.create_pull(title = "Pull request from Airflow" , body = "Update of matches results and training of the model" , head = "Development" , base = "main") ,
+    dag = dag)
 
-task1 >> task2 >> task3
-# >> task4 >> task5
+task1 >> task2 >> task3 >> task4 >> task5
