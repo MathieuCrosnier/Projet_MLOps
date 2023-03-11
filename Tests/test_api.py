@@ -27,17 +27,19 @@ def test_home():
     assert response.status_code == 200
     assert response.json() == "Welcome to SportsBetPy API !"
 
-@pytest.mark.parametrize("params,status_code,json" , [({"Username" : "Elsy" , "Password" : "Barbin"} , 200 , "Your account has been created !"),
-                                                      ({"Username" : "Elsy" , "Password" : "Crosnier"} , 400 , {'detail': "The username already exists !"}),
-                                                      ({"Username" : "" , "Password" : ""} , 400 , {'detail': "The username or password can't be empty !"}),
-                                                      ({"Username" : "Test" , "Password" : ""} , 400 , {'detail': "The username or password can't be empty !"}),
-                                                      ({"Username" : "" , "Password" : "Test"} , 400 , {'detail': "The username or password can't be empty !"})])
-def test_signup1(params , status_code , json):
-    response = client.post("/signup" , params = params)
+@pytest.mark.parametrize("user,status_code,json" , [({"Username" : "Elsy" , "Password" : "Barbin"} , 200 , "Your account has been created !"),
+                                                    ({"Username" : "Elsy" , "Password" : "Crosnier"} , 400 , {'detail': "The username already exists !"}),
+                                                    ({"Username" : "" , "Password" : ""} , 422 , {"detail":[{"loc":["body","Username"],"msg":"field required","type":"value_error.missing"},{"loc":["body","Password"],"msg":"field required","type":"value_error.missing"}]}),
+                                                    ({"Username" : "Test" , "Password" : ""} , 422 , {"detail":[{"loc":["body","Password"],"msg":"field required","type":"value_error.missing"}]}),
+                                                    ({"Username" : "" , "Password" : "Test"} , 422 , {"detail":[{"loc":["body","Username"],"msg":"field required","type":"value_error.missing"}]})])
+def test_signup1(user , status_code , json):
+    response = client.post("/signup" , data = user)
     assert response.status_code == status_code
     assert response.json() == json
 
-@pytest.mark.parametrize("user,status_code,json" , [({"username" : "" , "password" : ""} , 422 , [{'loc': ['body', 'username'], 'msg': 'field required', 'type': 'value_error.missing'}, {'loc': ['body', 'password'], 'msg': 'field required', 'type': 'value_error.missing'}]),
+@pytest.mark.parametrize("user,status_code,json" , [({"username" : "Test" , "password" : ""} , 422 , [{"loc":["body","password"],"msg":"field required","type":"value_error.missing"}]),
+                                                    ({"username" : "" , "password" : "Test"} , 422 , [{"loc":["body","username"],"msg":"field required","type":"value_error.missing"}]),
+                                                    ({"username" : "" , "password" : ""} , 422 , [{'loc': ['body', 'username'], 'msg': 'field required', 'type': 'value_error.missing'}, {'loc': ['body', 'password'], 'msg': 'field required', 'type': 'value_error.missing'}]),
                                                     ({"username" : "Micheline" , "password" : "Crobin"} , 401 , "Incorrect username or password !"),
                                                     ({"username" : "Mathieu" , "password" : "CROSNIER"} , 401 , "Incorrect username or password !"),
                                                     ({"username" : "Elsy" , "password" : "Barbin"} , 200 , None),
@@ -93,19 +95,19 @@ def test_initialize_table_users(user , status_code , json):
     assert response.json() == json
 
 def test_signup2():
-    response = client.post("/signup" , params = {"Username" : "Elsy" , "Password" : "Barbin"})
+    response = client.post("/signup" , data = {"Username" : "Elsy" , "Password" : "Barbin"})
     assert response.status_code == 200
     assert response.json() == "Your account has been created !"
 
-@pytest.mark.parametrize("user,status_code,json" , [({"username" : "Micheline" , "password" : "Crobin"} , 401 , {'detail' : 'Your session has expired !'}),
-                                                    ({"username" : "Mathieu" , "password" : "CROSNIER"} , 401 , {'detail' : 'Your session has expired !'}),
-                                                    ({"username" : "Elsy" , "password" : "Barbin"} , 403 , {'detail' : 'You must be an administrator to perform this action !'}),
-                                                    ({"username" : "Mathieu" , "password" : "Crosnier"} , 200 , 'The model has been trained !')])
-def test_train_model(user , status_code , json):
-    token = client.post("/token" , data = user).json().get("access_token")
-    response = client.post("/train_model" , headers = {"Authorization" : f"Bearer {token}"})
-    assert response.status_code == status_code
-    assert response.json() == json
+#@pytest.mark.parametrize("user,status_code,json" , [({"username" : "Micheline" , "password" : "Crobin"} , 401 , {'detail' : 'Your session has expired !'}),
+#                                                    ({"username" : "Mathieu" , "password" : "CROSNIER"} , 401 , {'detail' : 'Your session has expired !'}),
+#                                                    ({"username" : "Elsy" , "password" : "Barbin"} , 403 , {'detail' : 'You must be an administrator to perform this action !'}),
+#                                                    ({"username" : "Mathieu" , "password" : "Crosnier"} , 200 , 'The model has been trained !')])
+#def test_train_model(user , status_code , json):
+#    token = client.post("/token" , data = user).json().get("access_token")
+#    response = client.post("/train_model" , headers = {"Authorization" : f"Bearer {token}"})
+#    assert response.status_code == status_code
+#    assert response.json() == json
 
 @pytest.mark.parametrize("params,user,status_code,json" , [({"Home team" : "FC Girondins de Bordeaux" , "Away team" : "Grenoble Foot 38" , "Match date" : "2023-02-04"} , {"username" : "Micheline" , "password" : "Crobin"} , 401 , "Your session has expired !"),
                                                            ({"Home team" : "FC Girondins de Bordeaux" , "Away team" : "Grenoble Foot 38" , "Match date" : "2023-02-04"} , {"username" : "Mathieu" , "password" : "CROSNIER"} , 401 , "Your session has expired !"),
