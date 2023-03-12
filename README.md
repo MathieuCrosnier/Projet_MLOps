@@ -19,7 +19,7 @@ SportsBetPy is an application that allows a bettor to compute the odds of a foot
 ## Main features
 ### REST API
 The main feature is an API developed with FastAPI.
-The API allows to perform 7 different requests :
+The API allows to perform 8 different requests :
 
 - /signup
 
@@ -55,6 +55,12 @@ It requires administrator rights.
 
 This endpoint allows to reset the table [predictions](#predictions).
 It requires administrator rights.
+
+- /train_model
+
+This endpoint allows to train the Machine Learning model.
+It requires administrator rights.
+
 
 All the files related to the API are stored in the folder [API](https://github.com/MathieuCrosnier/Projet_MLOps/tree/main/API).
 
