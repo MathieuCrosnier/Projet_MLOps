@@ -61,6 +61,7 @@ It requires administrator rights.
 This endpoint allows to train the Machine Learning model.
 It requires administrator rights.
 
+
 All the files related to the API are stored in the folder [API](https://github.com/MathieuCrosnier/Projet_MLOps/tree/main/API).
 
 ### Databases
