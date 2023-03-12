@@ -631,7 +631,7 @@ def compute_roi_and_train_model(task_instance):
     gains_score = make_scorer(score_func = gains , needs_proba = True)
     cv = StratifiedKFold(n_splits = 5)
     results = cross_val_score(estimator = model , X = X_train_scaled , y = y_train , cv = cv , scoring = gains_score)
-    task_instance.xcom_push(key = "ROI" , value = results)
+    task_instance.xcom_push(key = "ROI" , value = results.mean())
     model.fit(X_train_scaled , y_train)
     dump(model , f"{output_data_folder}/model.pkl")
     dump(scaler , f"{output_data_folder}/scaler.pkl")   

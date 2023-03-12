@@ -2,3 +2,5 @@ API/output_data/production/*.csv
 API/output_data/test
 API/__pycache__
 Tests/__pycache__
+Airflow/__pycache__
+Docker/__pycache__
