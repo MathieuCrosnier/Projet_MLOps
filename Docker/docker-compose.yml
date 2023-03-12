@@ -22,9 +22,6 @@ services:
         condition: service_healthy
     ports:
       - 8000:8000
-    volumes:
-      - output_data:/home/API/output_data/production
 
 volumes:
   databases:
-  output_data:
